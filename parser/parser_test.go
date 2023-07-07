@@ -58,6 +58,72 @@ func TestParseBlock(t *testing.T) {
 	}
 }
 
+func TestParseBinaryExpression(t *testing.T) {
+	input := test.MakeInput(
+		`2 + 2`,
+		`2 - 2`,
+		`2 * 2`,
+		`2 / 2`,
+		`2 % 2`,
+		`2 + 2 * 2`,
+		`2 * 2 + 2`,
+	)
+
+	l := lexer.NewLexer(input, 4)
+	p := NewParser(l.Tokens)
+	ast := p.Parse()
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeBinaryExpression(
+			"+",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"-",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"*",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"/",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"%",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"+",
+			makeIntegerLiteral(2),
+			makeBinaryExpression(
+				"*",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"+",
+			makeBinaryExpression(
+				"*",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+			makeIntegerLiteral(2),
+		)),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+	}
+}
+
 func TestParseLiteral(t *testing.T) {
 	input := test.MakeInput(
 		`42`,
@@ -94,6 +160,10 @@ func makeBlockStatement(stmts ...ast.Statement) *ast.BlockStatement {
 
 func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {
 	return ast.NewExpressionStatement(e)
+}
+
+func makeBinaryExpression(op string, l, r ast.Expression) *ast.BinaryExpression {
+	return ast.NewBinaryExpression(op, l, r)
 }
 
 func makeIntegerLiteral(n int64) *ast.IntegerLiteral {

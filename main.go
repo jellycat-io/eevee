@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/jellycat-io/eevee/art"
 	"github.com/jellycat-io/eevee/config"
 	"github.com/jellycat-io/eevee/lexer"
 	"github.com/jellycat-io/eevee/parser"
@@ -13,6 +14,7 @@ import (
 func main() {
 	config := config.GetConfig()
 
+	fmt.Printf("%s\n", art.Eevee)
 	source := test.MakeInput(
 		`42`,
 		`	"eevee"`,

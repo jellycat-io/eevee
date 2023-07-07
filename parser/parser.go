@@ -82,7 +82,33 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression() ast.Expression {
-	return p.parsePrimaryExpression()
+	return p.parseAdditiveExpression()
+}
+
+func (p *Parser) parseAdditiveExpression() ast.Expression {
+	return p.parseBinaryExpression(p.parseMultiplicativeExpression, token.PLUS, token.MINUS)
+}
+
+func (p *Parser) parseMultiplicativeExpression() ast.Expression {
+	return p.parseBinaryExpression(p.parsePrimaryExpression, token.STAR, token.SLASH, token.PERCENT)
+}
+
+func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...token.TokenType) ast.Expression {
+	left := builder()
+
+	for _, op := range ops {
+		if p.match(op) {
+			operator, err := p.eat(op)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			right := builder()
+			left = ast.NewBinaryExpression(operator.Literal, left, right)
+		}
+	}
+
+	return left
 }
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {

@@ -80,6 +80,29 @@ func NewExpressionStatement(exp Expression) *ExpressionStatement {
 	return &ExpressionStatement{Type: "ExpressionStatement", Expression: exp}
 }
 
+type BinaryExpression struct {
+	// additive_expression 			::= multiplicative_expression { (PLUS | MINUS) multiplicative_expression }
+	// multiplicative_expression 	::= primary_expression { (STAR | SLASH | PERCENT) primary_expression }
+	Type     string     `json:"type"`
+	Operator string     `json:"operator"`
+	Left     Expression `json:"left"`
+	Right    Expression `json:"right"`
+}
+
+func (be *BinaryExpression) expressionNode() {}
+func (be *BinaryExpression) String() string {
+	return fmt.Sprintf("BinaryExpression(%s %v %v)", be.Operator, be.Left, be.Right)
+}
+
+func NewBinaryExpression(op string, left, right Expression) *BinaryExpression {
+	return &BinaryExpression{
+		Type:     "BinaryExpression",
+		Operator: op,
+		Left:     left,
+		Right:    right,
+	}
+}
+
 type IntegerLiteral struct {
 	// integer_literal ::= INT
 	Type  string `json:"type"`
