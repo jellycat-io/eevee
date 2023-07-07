@@ -72,6 +72,7 @@ func NewLexer(source string, tabSize int) *Lexer {
 		{`^-=`, token.MINUS_ASSIGN},
 		{`^\*=`, token.STAR_ASSIGN},
 		{`^/=`, token.SLASH_ASSIGN},
+		{`^%=`, token.PERCENT_ASSIGN},
 		/****************************************
 		 * Math operators
 		 ***************************************/

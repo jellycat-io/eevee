@@ -80,6 +80,29 @@ func NewExpressionStatement(exp Expression) *ExpressionStatement {
 	return &ExpressionStatement{Type: "ExpressionStatement", Expression: exp}
 }
 
+type AssignmentExpression struct {
+	// assignment_expression ::= logical_or_expression [ assignment_operator assignment_expression ]
+	// assignment_operator   ::= ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | STAR_ASSIGN | SLASH_ASSIGN
+	Type     string     `json:"type"`
+	Operator string     `json:"operator"`
+	Left     Expression `json:"left"`
+	Right    Expression `json:"right"`
+}
+
+func (ae *AssignmentExpression) expressionNode() {}
+func (ae *AssignmentExpression) String() string {
+	return fmt.Sprintf("AssignmentExpression(%s %v %v)", ae.Operator, ae.Left, ae.Right)
+}
+
+func NewAssignmentExpression(op string, left Expression, right Expression) *AssignmentExpression {
+	return &AssignmentExpression{
+		Type:     "AssignmentExpression",
+		Operator: op,
+		Left:     left,
+		Right:    right,
+	}
+}
+
 type BinaryExpression struct {
 	// additive_expression 			::= multiplicative_expression { (PLUS | MINUS) multiplicative_expression }
 	// multiplicative_expression 	::= primary_expression { (STAR | SLASH | PERCENT) primary_expression }
@@ -146,4 +169,19 @@ func (sl StringLiteral) String() string {
 
 func NewStringLiteral(value string) *StringLiteral {
 	return &StringLiteral{Type: "StringLiteral", Value: value}
+}
+
+type Identifier struct {
+	// identifier ::= IDENT
+	Type string `json:"type"`
+	Name string `json:"name"`
+}
+
+func (i *Identifier) expressionNode() {}
+func (i Identifier) String() string {
+	return fmt.Sprintf("Identifier(%s)", i.Name)
+}
+
+func NewIdentifier(name string) *Identifier {
+	return &Identifier{Type: "Identifier", Name: name}
 }

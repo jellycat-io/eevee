@@ -58,6 +58,70 @@ func TestParseBlock(t *testing.T) {
 	}
 }
 
+func TestParseAssignmentExpression(t *testing.T) {
+	input := test.MakeInput(
+		`pokemon = "eevee"`,
+		`level += 1`,
+		`pokemon = eevee`,
+		`pokemon = eevee = flareon`,
+		`pokemon = eevee = "eevee"`,
+		`level = 40 + 2`,
+	)
+
+	l := lexer.NewLexer(input, 4)
+	p := NewParser(l.Tokens)
+	ast := p.Parse()
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("pokemon"),
+			makeStringLiteral("eevee"),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"+=",
+			makeIdentifier("level"),
+			makeIntegerLiteral(1),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("pokemon"),
+			makeIdentifier("eevee"),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("pokemon"),
+			makeAssignmentExpression(
+				"=",
+				makeIdentifier("eevee"),
+				makeIdentifier("flareon"),
+			),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("pokemon"),
+			makeAssignmentExpression(
+				"=",
+				makeIdentifier("eevee"),
+				makeStringLiteral("eevee"),
+			),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("level"),
+			makeBinaryExpression(
+				"+",
+				makeIntegerLiteral(40),
+				makeIntegerLiteral(2),
+			),
+		)),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+	}
+}
+
 func TestParseBinaryExpression(t *testing.T) {
 	input := test.MakeInput(
 		`2 + 2`,
@@ -172,6 +236,10 @@ func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {
 	return ast.NewExpressionStatement(e)
 }
 
+func makeAssignmentExpression(op string, l, r ast.Expression) *ast.AssignmentExpression {
+	return ast.NewAssignmentExpression(op, l, r)
+}
+
 func makeBinaryExpression(op string, l, r ast.Expression) *ast.BinaryExpression {
 	return ast.NewBinaryExpression(op, l, r)
 }
@@ -186,4 +254,8 @@ func makeFloatLiteral(n float64) *ast.FloatLiteral {
 
 func makeStringLiteral(s string) *ast.StringLiteral {
 	return ast.NewStringLiteral(s)
+}
+
+func makeIdentifier(name string) *ast.Identifier {
+	return ast.NewIdentifier(name)
 }
