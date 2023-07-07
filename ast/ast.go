@@ -41,7 +41,33 @@ func NewProgram(statements []Statement) *Program {
 	}
 }
 
+type BlockStatement struct {
+	// block_statement ::= INDENT statements DEDENT
+	Type       string      `json:"type"`
+	Statements []Statement `json:"statements"`
+}
+
+func (bs *BlockStatement) statementNode() {}
+func (bs *BlockStatement) String() string {
+	result := "BlockStatement("
+	for _, stmt := range bs.Statements {
+		result += stmt.String()
+	}
+	result += ")"
+
+	return result
+}
+
+func NewBlockStatement(statements []Statement) *BlockStatement {
+	return &BlockStatement{
+		Type:       "BlockStatement",
+		Statements: statements,
+	}
+}
+
 type ExpressionStatement struct {
+	// expression_statement ::= expression
+	Type       string     `json:"type"`
 	Expression Expression `json:"expression"`
 }
 
@@ -51,11 +77,13 @@ func (es *ExpressionStatement) String() string {
 }
 
 func NewExpressionStatement(exp Expression) *ExpressionStatement {
-	return &ExpressionStatement{Expression: exp}
+	return &ExpressionStatement{Type: "ExpressionStatement", Expression: exp}
 }
 
 type IntegerLiteral struct {
-	Value int64 `json:"value"`
+	// integer_literal ::= INT
+	Type  string `json:"type"`
+	Value int64  `json:"value"`
 }
 
 func (il *IntegerLiteral) expressionNode() {}
@@ -64,10 +92,12 @@ func (il IntegerLiteral) String() string {
 }
 
 func NewIntegerLiteral(value int64) *IntegerLiteral {
-	return &IntegerLiteral{Value: value}
+	return &IntegerLiteral{Type: "IntegerLiteral", Value: value}
 }
 
 type FloatLiteral struct {
+	// float_literal ::= FLOAT
+	Type  string  `json:"type"`
 	Value float64 `json:"value"`
 }
 
@@ -77,10 +107,12 @@ func (fl FloatLiteral) String() string {
 }
 
 func NewFloatLiteral(value float64) *FloatLiteral {
-	return &FloatLiteral{Value: value}
+	return &FloatLiteral{Type: "FloatLiteral", Value: value}
 }
 
 type StringLiteral struct {
+	// string_literal ::= STRING
+	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
@@ -90,5 +122,5 @@ func (sl StringLiteral) String() string {
 }
 
 func NewStringLiteral(value string) *StringLiteral {
-	return &StringLiteral{Value: value}
+	return &StringLiteral{Type: "StringLiteral", Value: value}
 }

@@ -9,7 +9,57 @@ import (
 
 func TestParseProgram(t *testing.T) {
 	input := test.MakeInput(
-		"INT=42",
+		`INT=42`,
+		`STRING="eevee"`,
+		`FLOAT=3.14`,
+	)
+
+	tokens := test.TokensFromString(input)
+	p := NewParser(tokens)
+	ast := p.Parse()
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeIntegerLiteral(42)),
+		makeExpressionStatement(makeStringLiteral("eevee")),
+		makeExpressionStatement(makeFloatLiteral(3.14)),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+	}
+}
+
+func TestParseBlock(t *testing.T) {
+	input := test.MakeInput(
+		`INT=42`,
+		`	STRING="eevee"`,
+		`		FLOAT=3.14`,
+		`STRING="flareon"`,
+	)
+
+	tokens := test.TokensFromString(input)
+	p := NewParser(tokens)
+	ast := p.Parse()
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeIntegerLiteral(42)),
+		makeBlockStatement(
+			makeExpressionStatement(makeStringLiteral("eevee")),
+			makeBlockStatement(
+				makeExpressionStatement(makeFloatLiteral(3.14)),
+			),
+		),
+		makeExpressionStatement(makeStringLiteral("flareon")),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+	}
+}
+
+func TestParseLiteral(t *testing.T) {
+	input := test.MakeInput(
+		`INT=42`,
 		`STRING="eevee"`,
 		`FLOAT=3.14`,
 	)
@@ -33,6 +83,12 @@ func makeProgram(stmts ...ast.Statement) *ast.Program {
 	s := []ast.Statement{}
 	s = append(s, stmts...)
 	return ast.NewProgram(s)
+}
+
+func makeBlockStatement(stmts ...ast.Statement) *ast.BlockStatement {
+	s := []ast.Statement{}
+	s = append(s, stmts...)
+	return ast.NewBlockStatement(s)
 }
 
 func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {

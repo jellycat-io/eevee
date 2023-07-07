@@ -106,6 +106,7 @@ func NewLexer(source string, tabSize int) *Lexer {
 	l := &Lexer{
 		source:      source,
 		indentStack: []int{0},
+		tabSize:     tabSize,
 		patterns:    compiledPatterns,
 	}
 

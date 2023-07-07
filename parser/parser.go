@@ -51,7 +51,25 @@ func (p *Parser) parseStatements(stopTokenType token.TokenType) []ast.Statement 
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	return p.parseExpressionStatement()
+	switch p.currentToken.Type {
+	case token.INDENT:
+		return p.parseBlockStatement()
+	default:
+		return p.parseExpressionStatement()
+	}
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	stmts := []ast.Statement{}
+	p.eat(token.INDENT)
+
+	if !p.match(token.DEDENT) {
+		stmts = append(stmts, p.parseStatements(token.DEDENT)...)
+	}
+
+	p.eat(token.DEDENT)
+
+	return ast.NewBlockStatement(stmts)
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

@@ -14,8 +14,11 @@ func main() {
 	config := config.GetConfig()
 
 	source := test.MakeInput(
-		"42",
-		`"eevee"`,
+		`42`,
+		`	"eevee"`,
+		`		"flareon"`,
+		`		"vaporeon"`,
+		`3.14`,
 	)
 
 	l := lexer.NewLexer(source, config.TabSize)
