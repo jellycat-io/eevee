@@ -4,18 +4,19 @@ import (
 	"testing"
 
 	"github.com/jellycat-io/eevee/ast"
+	"github.com/jellycat-io/eevee/lexer"
 	"github.com/jellycat-io/eevee/test"
 )
 
 func TestParseProgram(t *testing.T) {
 	input := test.MakeInput(
-		`INT=42`,
-		`STRING="eevee"`,
-		`FLOAT=3.14`,
+		`42`,
+		`"eevee"`,
+		`3.14`,
 	)
 
-	tokens := test.TokensFromString(input)
-	p := NewParser(tokens)
+	l := lexer.NewLexer(input, 4)
+	p := NewParser(l.Tokens)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -31,14 +32,14 @@ func TestParseProgram(t *testing.T) {
 
 func TestParseBlock(t *testing.T) {
 	input := test.MakeInput(
-		`INT=42`,
-		`	STRING="eevee"`,
-		`		FLOAT=3.14`,
-		`STRING="flareon"`,
+		`42`,
+		`	"eevee"`,
+		`		3.14`,
+		`"flareon"`,
 	)
 
-	tokens := test.TokensFromString(input)
-	p := NewParser(tokens)
+	l := lexer.NewLexer(input, 4)
+	p := NewParser(l.Tokens)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -59,13 +60,13 @@ func TestParseBlock(t *testing.T) {
 
 func TestParseLiteral(t *testing.T) {
 	input := test.MakeInput(
-		`INT=42`,
-		`STRING="eevee"`,
-		`FLOAT=3.14`,
+		`42`,
+		`"eevee"`,
+		`3.14`,
 	)
 
-	tokens := test.TokensFromString(input)
-	p := NewParser(tokens)
+	l := lexer.NewLexer(input, 4)
+	p := NewParser(l.Tokens)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(

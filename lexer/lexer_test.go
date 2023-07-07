@@ -7,7 +7,7 @@ import (
 	"github.com/jellycat-io/eevee/token"
 )
 
-func TestNextToken(t *testing.T) {
+func TestTokenizer(t *testing.T) {
 	input := test.MakeInput(
 		`#This is a comment`,
 		`42`,
@@ -15,6 +15,7 @@ func TestNextToken(t *testing.T) {
 		`"eevee"`,
 		`""`,
 		`	"flareon"`,
+		`"vaporeon"`,
 	)
 
 	expected := []token.Token{
@@ -24,6 +25,9 @@ func TestNextToken(t *testing.T) {
 		token.NewToken(token.STRING, "\"\"", 5, 1),
 		token.NewToken(token.INDENT, "", 6, 1),
 		token.NewToken(token.STRING, "\"flareon\"", 6, 5),
+		token.NewToken(token.DEDENT, "", 7, 1),
+		token.NewToken(token.STRING, "\"vaporeon\"", 7, 1),
+		token.NewToken(token.EOF, "", 8, 1),
 	}
 
 	l := NewLexer(input, 4)
