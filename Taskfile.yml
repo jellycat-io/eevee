@@ -1,0 +1,40 @@
+version: '3'
+
+tasks:
+
+  deps:install:
+    desc: Install the project dependencies
+    cmds:
+      - go mod download
+
+  deps:tidy:
+    desc: Clean go.mod
+    cmds:
+      - go mod tidy
+
+  fmt:
+    desc: Format source and test files
+    cmds:
+      - gofmt
+
+  lint:
+    desc: Format source and test files
+    cmds:
+      - golangci-lint run ./...
+
+  fmt:
+    desc: Format source and test files
+    cmds:
+      - go build -v ./...
+
+  test:
+    desc: Run the unit tests
+    cmds:
+      - go test -v ./...
+    pre:
+      - task: env:activate
+
+  run:
+    desc: Run the main script
+    cmds:
+      - go run main.go

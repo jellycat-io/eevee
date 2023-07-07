@@ -31,7 +31,7 @@ func main() {
 	p := parser.NewParser(tokens)
 	ast := p.Parse()
 
-	jsonData, err := json.MarshalIndent(ast, "", "	")
+	jsonData, err := json.MarshalIndent(ast, "", "    ")
 	if err != nil {
 		fmt.Println(err)
 	}
