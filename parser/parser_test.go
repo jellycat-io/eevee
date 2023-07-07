@@ -67,6 +67,7 @@ func TestParseBinaryExpression(t *testing.T) {
 		`2 % 2`,
 		`2 + 2 * 2`,
 		`2 * 2 + 2`,
+		`2 * (2 + 2)`,
 	)
 
 	l := lexer.NewLexer(input, 4)
@@ -116,6 +117,15 @@ func TestParseBinaryExpression(t *testing.T) {
 				makeIntegerLiteral(2),
 			),
 			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"*",
+			makeIntegerLiteral(2),
+			makeBinaryExpression(
+				"+",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
 		)),
 	)
 

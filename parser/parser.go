@@ -9,6 +9,12 @@ import (
 	"github.com/jellycat-io/eevee/token"
 )
 
+// var literalTypes = []token.TokenType{
+// 	token.INT,
+// 	token.FLOAT,
+// 	token.STRING,
+// }
+
 type Parser struct {
 	tokens          []token.Token
 	currentTokenIdx int
@@ -112,12 +118,28 @@ func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...tok
 }
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {
+	if p.match(token.LPAREN) {
+		return p.parseGroupedExpression()
+	}
+
 	lit, err := p.parseLiteral()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return lit
+}
+
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	if _, err := p.eat(token.LPAREN); err != nil {
+		log.Fatal(err)
+	}
+	exp := p.parseExpression()
+	if _, err := p.eat(token.RPAREN); err != nil {
+		log.Fatal(err)
+	}
+
+	return exp
 }
 
 func (p *Parser) parseLiteral() (ast.Expression, error) {
@@ -196,4 +218,14 @@ func (p *Parser) match(tokenType token.TokenType) bool {
 
 // func (p *Parser) isAtEnd() bool {
 // 	return p.currentToken == token.Token{} || p.currentToken.Type == token.EOF
+// }
+
+// func isLiteral(tokenType token.TokenType) bool {
+// 	for _, tt := range literalTypes {
+// 		if tt == tokenType {
+// 			return true
+// 		}
+// 	}
+
+// 	return false
 // }
