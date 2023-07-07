@@ -148,10 +148,10 @@ func (l *Lexer) tokenize() {
 	}
 
 	for range l.indentStack[1:] {
-		l.Tokens = append(l.Tokens, token.NewToken(token.DEDENT, "", len(lines)+1, 1))
+		l.Tokens = append(l.Tokens, token.NewToken(token.DEDENT, "", len(lines), 1))
 	}
 
-	l.Tokens = append(l.Tokens, token.NewToken(token.EOF, "", len(lines)+1, 1))
+	l.Tokens = append(l.Tokens, token.NewToken(token.EOF, "", len(lines), 1))
 }
 
 func (l *Lexer) tokenizeLine(line string, lineNum, column int) {
