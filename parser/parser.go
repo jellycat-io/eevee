@@ -61,13 +61,17 @@ func (p *Parser) parseStatement() ast.Statement {
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	stmts := []ast.Statement{}
-	p.eat(token.INDENT)
+	if _, err := p.eat(token.INDENT); err != nil {
+		log.Fatal(err)
+	}
 
 	if !p.match(token.DEDENT) {
 		stmts = append(stmts, p.parseStatements(token.DEDENT)...)
 	}
 
-	p.eat(token.DEDENT)
+	if _, err := p.eat(token.DEDENT); err != nil {
+		log.Fatal(err)
+	}
 
 	return ast.NewBlockStatement(stmts)
 }
@@ -164,6 +168,6 @@ func (p *Parser) match(tokenType token.TokenType) bool {
 	return p.currentToken.Type == tokenType
 }
 
-func (p *Parser) isAtEnd() bool {
-	return p.currentToken == token.Token{} || p.currentToken.Type == token.EOF
-}
+// func (p *Parser) isAtEnd() bool {
+// 	return p.currentToken == token.Token{} || p.currentToken.Type == token.EOF
+// }
