@@ -32,3 +32,17 @@ jobs:
         GOPATH: ${{ runner.workspace }}
         GO111MODULE: "on"
       run: go test -v ./...
+
+    - name: Format check
+      env:
+        GOPATH: ${{ runner.workspace }}
+        GO111MODULE: "on"
+      run: test -z $(gofmt -l .)
+
+    - name: Lint
+      env:
+          GOPATH: ${{ runner.workspace }}
+          GO111MODULE: "on"
+      run: |
+        go get -u golang.org/x/lint/golint
+        golint -set_exit_status $(go list ./...)
