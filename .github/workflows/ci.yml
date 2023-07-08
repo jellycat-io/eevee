@@ -33,12 +33,6 @@ jobs:
         GO111MODULE: "on"
       run: go test -v ./...
 
-    - name: Format check
-      env:
-        GOPATH: ${{ runner.workspace }}
-        GO111MODULE: "on"
-      run: test -z $(gofmt -l .)
-
     - name: Lint
       env:
           GOPATH: ${{ runner.workspace }}

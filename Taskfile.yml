@@ -12,17 +12,12 @@ tasks:
     cmds:
       - go mod tidy
 
-  fmt:
-    desc: Format source and test files
-    cmds:
-      - gofmt
-
   lint:
     desc: Format source and test files
     cmds:
       - golangci-lint run ./...
 
-  fmt:
+  build:
     desc: Format source and test files
     cmds:
       - go build -v ./...
