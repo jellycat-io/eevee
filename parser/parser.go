@@ -55,7 +55,7 @@ func (p *Parser) Errors() []string {
 
 func (p *Parser) Parse() *ast.Program {
 	if len(p.tokens) == 0 {
-		return &ast.Program{}
+		return nil
 	}
 
 	return p.parseProgram()
