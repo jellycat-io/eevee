@@ -21,6 +21,7 @@ func NewToken(tokType TokenType, literal string, line, column int) Token {
 const (
 	ILLEGAL        = TokenType("ILLEGAL")
 	WHITESPACE     = TokenType("WHITESPACE")
+	EOL            = TokenType("EOL")
 	COMMENT        = TokenType("COMMENT")
 	INDENT         = TokenType("INDENT")
 	DEDENT         = TokenType("DEDENT")

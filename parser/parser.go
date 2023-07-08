@@ -86,6 +86,10 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = p.parseExpressionStatement()
 	}
 
+	if p.match(token.EOL) {
+		p.eat(token.EOL)
+	}
+
 	return stmt
 }
 
@@ -103,11 +107,6 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	if p.isREPL && isLiteral(p.currentToken.Type) {
-		exp := p.parseLiteral()
-		return ast.NewExpressionStatement(exp)
-	}
-
 	exp := p.parseExpression()
 	return ast.NewExpressionStatement(exp)
 }
@@ -120,7 +119,13 @@ func (p *Parser) parseExpression() ast.Expression {
 		return nil
 	}
 
-	exp := p.parseAssignmentExpression()
+	var exp ast.Expression
+
+	if p.isREPL && p.peekToken().Type == token.EOL && (isLiteral(p.currentToken.Type) || p.match(token.IDENT)) {
+		exp = p.parsePrimaryExpression()
+	} else {
+		exp = p.parseAssignmentExpression()
+	}
 
 	// If we've encountered an error and haven't consumed a new token,
 	// enter panic mode and synchronize.
@@ -146,13 +151,11 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 }
 
 func (p *Parser) parseAdditiveExpression() ast.Expression {
-	exp := p.parseBinaryExpression(p.parseMultiplicativeExpression, token.PLUS, token.MINUS)
-	return exp
+	return p.parseBinaryExpression(p.parseMultiplicativeExpression, token.PLUS, token.MINUS)
 }
 
 func (p *Parser) parseMultiplicativeExpression() ast.Expression {
-	exp := p.parseBinaryExpression(p.parsePrimaryExpression, token.STAR, token.SLASH, token.PERCENT)
-	return exp
+	return p.parseBinaryExpression(p.parsePrimaryExpression, token.STAR, token.SLASH, token.PERCENT)
 }
 
 func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...token.TokenType) ast.Expression {
@@ -172,15 +175,16 @@ func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...tok
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {
 	if isLiteral(p.currentToken.Type) {
-		lit := p.parseLiteral()
-
-		return lit
+		return p.parseLiteral()
 	} else if p.match(token.LPAREN) {
 		return p.parseGroupedExpression()
-	} else {
-		return p.parseLeftHandSideExpression()
+	} else if p.match(token.IDENT) {
+		return p.parseIdentifier()
 	}
 
+	p.error(fmt.Errorf("[%d:%d] Unexpected token: %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
+	p.advance()
+	return nil
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
@@ -189,16 +193,6 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.eat(token.RPAREN)
 
 	return exp
-}
-
-func (p *Parser) parseLeftHandSideExpression() ast.Expression {
-	if !p.match(token.IDENT) {
-		p.error(fmt.Errorf("[%d:%d] Expected identifier, but got %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
-		p.advance()
-		return nil
-	}
-
-	return p.parseIdentifier()
 }
 
 func (p *Parser) parseIdentifier() *ast.Identifier {
@@ -235,6 +229,7 @@ func (p *Parser) parseIntegerLiteral() *ast.IntegerLiteral {
 func (p *Parser) parseFloatLiteral() *ast.FloatLiteral {
 	tok := p.eat(token.FLOAT)
 	value, err := strconv.ParseFloat(tok.Literal, 64)
+
 	if err != nil {
 		p.error(fmt.Errorf("[%d:%d] Could not parse %q as float", p.currentToken.Line, p.currentToken.Column, tok.Literal))
 	}
@@ -278,28 +273,24 @@ func (p *Parser) checkComplexAssignmentOperator() token.TokenType {
 }
 
 func (p *Parser) eat(tokenType token.TokenType) token.Token {
+	tok := p.currentToken
 	if !p.match(tokenType) {
 		p.error(fmt.Errorf("[%d:%d] Expected %q, but got %q", p.currentToken.Line, p.currentToken.Column, tokenType, p.currentToken.Type))
-		tok := token.NewToken(token.ILLEGAL, "", p.currentToken.Line, p.currentToken.Column)
-		p.advance()
-		return tok
+		tok = token.NewToken(token.ILLEGAL, "", p.currentToken.Line, p.currentToken.Column)
 	}
 
-	tok := p.currentToken
 	p.advance()
 
 	return tok
 }
 
 func (p *Parser) synchronize() {
-	for !p.match(token.EOF) {
-		// Synchronize at least until the block is finished
-		if p.match(token.DEDENT) || p.match(token.INDENT) {
-			p.advance()
-			return
-		}
-
+	for !p.match(token.EOL) && !p.isAtEnd() {
 		p.advance()
+	}
+
+	if !p.isREPL && p.isAtEnd() {
+		p.eat(token.EOL)
 	}
 }
 
@@ -309,7 +300,7 @@ func (p *Parser) advance() {
 	if p.currentTokenIdx < len(p.tokens) {
 		p.currentToken = p.tokens[p.currentTokenIdx]
 	} else {
-		p.currentToken = token.Token{}
+		p.currentToken = token.NewToken(token.EOF, "", p.currentToken.Line, p.currentToken.Column+1)
 	}
 
 	p.panicMode = false
@@ -337,9 +328,16 @@ func (p *Parser) matchAny(tokenTypes ...token.TokenType) bool {
 	return false
 }
 
-// func (p *Parser) isAtEnd() bool {
-// 	return p.currentToken == token.Token{} || p.currentToken.Type == token.EOF
-// }
+func (p *Parser) peekToken() token.Token {
+	if p.currentTokenIdx+1 < len(p.tokens) {
+		return p.tokens[p.currentTokenIdx+1]
+	}
+	return token.Token{}
+}
+
+func (p *Parser) isAtEnd() bool {
+	return p.currentToken.Type == token.EOF
+}
 
 func isLiteral(tokenType token.TokenType) bool {
 	for _, tt := range literalTypes {

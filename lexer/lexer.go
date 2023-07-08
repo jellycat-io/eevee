@@ -146,7 +146,9 @@ func (l *Lexer) tokenize() {
 			}
 		}
 
-		l.tokenizeLine(line, lineNum, column)
+		column = l.tokenizeLine(line, lineNum, column)
+
+		l.Tokens = append(l.Tokens, token.NewToken(token.EOL, "", lineNum, column))
 	}
 
 	for range l.indentStack[1:] {
@@ -156,7 +158,7 @@ func (l *Lexer) tokenize() {
 	l.Tokens = append(l.Tokens, token.NewToken(token.EOF, "", len(lines)+1, 1))
 }
 
-func (l *Lexer) tokenizeLine(line string, lineNum, column int) {
+func (l *Lexer) tokenizeLine(line string, lineNum, column int) int {
 	line = strings.TrimSpace(line)
 
 	for line != "" {
@@ -187,6 +189,8 @@ func (l *Lexer) tokenizeLine(line string, lineNum, column int) {
 			column++
 		}
 	}
+
+	return column
 }
 
 func lookupIdent(ident string) token.TokenType {

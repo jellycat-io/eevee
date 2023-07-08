@@ -17,9 +17,10 @@ func TestParseProgram(t *testing.T) {
 	)
 
 	l := lexer.New(input, 4)
-	fmt.Println("tokens", l.Tokens)
 	p := New(l.Tokens, true)
 	ast := p.Parse()
+
+	checkParserErrors(t, p)
 
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeIntegerLiteral(42)),
@@ -43,6 +44,8 @@ func TestParseBlock(t *testing.T) {
 	l := lexer.New(input, 4)
 	p := New(l.Tokens, true)
 	ast := p.Parse()
+
+	checkParserErrors(t, p)
 
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeIntegerLiteral(42)),
@@ -73,6 +76,8 @@ func TestParseAssignmentExpression(t *testing.T) {
 	l := lexer.New(input, 4)
 	p := New(l.Tokens, false)
 	ast := p.Parse()
+
+	checkParserErrors(t, p)
 
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeAssignmentExpression(
@@ -137,8 +142,11 @@ func TestParseBinaryExpression(t *testing.T) {
 	)
 
 	l := lexer.New(input, 4)
+	fmt.Println(l.Tokens)
 	p := New(l.Tokens, false)
 	ast := p.Parse()
+
+	checkParserErrors(t, p)
 
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeBinaryExpression(
@@ -211,6 +219,8 @@ func TestParseLiteral(t *testing.T) {
 	p := New(l.Tokens, true)
 	ast := p.Parse()
 
+	checkParserErrors(t, p)
+
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeIntegerLiteral(42)),
 		makeExpressionStatement(makeStringLiteral("eevee")),
@@ -260,4 +270,17 @@ func makeStringLiteral(s string) *ast.StringLiteral {
 
 func makeIdentifier(name string) *ast.Identifier {
 	return ast.NewIdentifier(name)
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("Parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("Parser error: %q", msg)
+	}
+	t.FailNow()
 }

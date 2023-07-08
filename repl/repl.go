@@ -35,6 +35,9 @@ func Start(in io.Reader, out io.Writer) {
 
 		line := scanner.Text()
 		l := lexer.New(line, 4)
+		for _, t := range l.Tokens {
+			fmt.Println(t)
+		}
 		p := parser.New(l.Tokens, true)
 		ast := p.Parse()
 
