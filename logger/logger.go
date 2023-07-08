@@ -1,8 +1,11 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
+
+	"github.com/TwiN/go-color"
 )
 
 // Logger represents a simple logger with different logging levels
@@ -12,8 +15,8 @@ type Logger struct {
 	fatalLogger *log.Logger
 }
 
-// NewLogger creates a new Logger
-func NewLogger() *Logger {
+// New creates a new Logger
+func New() *Logger {
 	return &Logger{
 		infoLogger:  log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime),
 		errorLogger: log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime),
@@ -23,19 +26,22 @@ func NewLogger() *Logger {
 
 // Info logs a message at info level
 func (l *Logger) Info(msg string) {
-	l.infoLogger.Println(msg)
+	l.infoLogger.Printf(color.InBlue("%s\n"), msg)
 }
 
 // Error logs a message at error level
 func (l *Logger) Error(msg string) {
-	red := "\033[31m"
-	reset := "\033[0m"
-	l.errorLogger.Printf("%s%s%s\n", red, msg, reset)
+	l.errorLogger.Printf(color.InRed("%s\n"), msg)
 }
 
 // Fatal logs a message at fatal level and exits the program
 func (l *Logger) Fatal(msg string) {
-	red := "\033[31m"
-	reset := "\033[0m"
-	l.fatalLogger.Fatalf("%s%s%s\n", red, msg, reset)
+	l.fatalLogger.Printf(color.InRed("%s\n"), msg)
+}
+
+func (l *Logger) PrintParserErrors(errors []string) {
+	fmt.Println(color.InBold(color.InRed("parser errors:\n")))
+	for _, msg := range errors {
+		fmt.Println(color.InRed("\t" + msg))
+	}
 }

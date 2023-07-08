@@ -27,10 +27,10 @@ func TestTokenizer(t *testing.T) {
 		token.NewToken(token.STRING, "\"flareon\"", 6, 5),
 		token.NewToken(token.DEDENT, "", 7, 1),
 		token.NewToken(token.STRING, "\"vaporeon\"", 7, 1),
-		token.NewToken(token.EOF, "", 8, 1),
+		token.NewToken(token.EOF, "", 9, 1),
 	}
 
-	l := NewLexer(input, 4)
+	l := New(input, 4)
 
 	for i, tok := range expected {
 		if tok != l.Tokens[i] {

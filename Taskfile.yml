@@ -34,7 +34,12 @@ tasks:
     pre:
       - task: env:activate
 
-  run:
-    desc: Run the main script
+  repl:
+    desc: Start REPL
     cmds:
       - go run main.go
+
+  run:
+    desc: Run test.eve file
+    cmds:
+      - go run main.go run ./test.eve

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/jellycat-io/eevee/ast"
@@ -15,8 +16,9 @@ func TestParseProgram(t *testing.T) {
 		`3.14`,
 	)
 
-	l := lexer.NewLexer(input, 4)
-	p := NewParser(l.Tokens)
+	l := lexer.New(input, 4)
+	fmt.Println("tokens", l.Tokens)
+	p := New(l.Tokens, true)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -26,7 +28,7 @@ func TestParseProgram(t *testing.T) {
 	)
 
 	if ast.String() != expectedAst.String() {
-		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
 	}
 }
 
@@ -38,8 +40,8 @@ func TestParseBlock(t *testing.T) {
 		`"flareon"`,
 	)
 
-	l := lexer.NewLexer(input, 4)
-	p := NewParser(l.Tokens)
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -54,7 +56,7 @@ func TestParseBlock(t *testing.T) {
 	)
 
 	if ast.String() != expectedAst.String() {
-		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
 	}
 }
 
@@ -68,8 +70,8 @@ func TestParseAssignmentExpression(t *testing.T) {
 		`level = 40 + 2`,
 	)
 
-	l := lexer.NewLexer(input, 4)
-	p := NewParser(l.Tokens)
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -118,7 +120,7 @@ func TestParseAssignmentExpression(t *testing.T) {
 	)
 
 	if ast.String() != expectedAst.String() {
-		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
 	}
 }
 
@@ -134,8 +136,8 @@ func TestParseBinaryExpression(t *testing.T) {
 		`2 * (2 + 2)`,
 	)
 
-	l := lexer.NewLexer(input, 4)
-	p := NewParser(l.Tokens)
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -194,7 +196,7 @@ func TestParseBinaryExpression(t *testing.T) {
 	)
 
 	if ast.String() != expectedAst.String() {
-		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
 	}
 }
 
@@ -205,8 +207,8 @@ func TestParseLiteral(t *testing.T) {
 		`3.14`,
 	)
 
-	l := lexer.NewLexer(input, 4)
-	p := NewParser(l.Tokens)
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
 	ast := p.Parse()
 
 	expectedAst := makeProgram(
@@ -216,7 +218,7 @@ func TestParseLiteral(t *testing.T) {
 	)
 
 	if ast.String() != expectedAst.String() {
-		t.Fatalf("Expected: %q, got %q", ast, expectedAst)
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
 	}
 }
 

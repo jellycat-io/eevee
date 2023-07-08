@@ -20,7 +20,7 @@ type Lexer struct {
 	}
 }
 
-func NewLexer(source string, tabSize int) *Lexer {
+func New(source string, tabSize int) *Lexer {
 	patternList := []struct {
 		pattern string
 		tokType token.TokenType
@@ -150,10 +150,10 @@ func (l *Lexer) tokenize() {
 	}
 
 	for range l.indentStack[1:] {
-		l.Tokens = append(l.Tokens, token.NewToken(token.DEDENT, "", len(lines), 1))
+		l.Tokens = append(l.Tokens, token.NewToken(token.DEDENT, "", len(lines)+1, 1))
 	}
 
-	l.Tokens = append(l.Tokens, token.NewToken(token.EOF, "", len(lines), 1))
+	l.Tokens = append(l.Tokens, token.NewToken(token.EOF, "", len(lines)+1, 1))
 }
 
 func (l *Lexer) tokenizeLine(line string, lineNum, column int) {
