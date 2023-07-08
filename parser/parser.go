@@ -121,7 +121,7 @@ func (p *Parser) parseExpression() ast.Expression {
 
 	var exp ast.Expression
 
-	if p.isREPL && p.peekToken().Type == token.EOL && (isLiteral(p.currentToken.Type) || p.match(token.IDENT)) {
+	if p.isREPL && p.peekToken().Type == token.EOF && (isLiteral(p.currentToken.Type) || p.match(token.IDENT)) {
 		exp = p.parsePrimaryExpression()
 	} else {
 		exp = p.parseAssignmentExpression()

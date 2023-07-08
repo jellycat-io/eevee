@@ -148,7 +148,9 @@ func (l *Lexer) tokenize() {
 
 		column = l.tokenizeLine(line, lineNum, column)
 
-		l.Tokens = append(l.Tokens, token.NewToken(token.EOL, "", lineNum, column))
+		if lineNum != len(lines) { // Skip adding EOL token for the last line
+			l.Tokens = append(l.Tokens, token.NewToken(token.EOL, "", lineNum, column))
+		}
 	}
 
 	for range l.indentStack[1:] {
