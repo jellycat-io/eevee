@@ -65,6 +65,9 @@ const (
 	IF             = TokenType("IF")
 	THEN           = TokenType("THEN")
 	ELSE           = TokenType("ELSE")
+	WHILE          = TokenType("WHILE")
+	FOR            = TokenType("FOR")
+	DO             = TokenType("DO")
 	RETURN         = TokenType("RETURN")
 	NULL           = TokenType("NULL")
 	INT            = TokenType("INT")
@@ -74,9 +77,11 @@ const (
 
 var Keywords = map[string]TokenType{
 	"and":    AND,
+	"do":     DO,
 	"else":   ELSE,
 	"false":  FALSE,
 	"fn":     FUNCTION,
+	"for":    FOR,
 	"if":     IF,
 	"is":     EQ,
 	"import": IMPORT,
@@ -88,4 +93,5 @@ var Keywords = map[string]TokenType{
 	"return": RETURN,
 	"then":   THEN,
 	"true":   TRUE,
+	"while":  WHILE,
 }

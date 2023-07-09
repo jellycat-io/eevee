@@ -134,6 +134,26 @@ func NewIfStatement(condition Expression, consequent, alternate Statement) *IfSt
 	}
 }
 
+type WhileStatement struct {
+	// while_statement ::= WHILE expression DO statement
+	Type      string     `json:"type"`
+	Condition Expression `json:"condition"`
+	Body      Statement  `json:"body"`
+}
+
+func (ws *WhileStatement) statementNode() {
+}
+func (ws *WhileStatement) String() string {
+	return fmt.Sprintf("(WhileStatement %v %v)", ws.Condition, ws.Body)
+}
+func NewWhileStatement(condition Expression, body Statement) *WhileStatement {
+	return &WhileStatement{
+		Type:      "WhileStatement",
+		Condition: condition,
+		Body:      body,
+	}
+}
+
 type ExpressionStatement struct {
 	// expression_statement ::= expression
 	Type       string     `json:"type"`

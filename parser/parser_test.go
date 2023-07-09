@@ -196,6 +196,53 @@ func TestParseAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestParseWhileStatement(t *testing.T) {
+	input := test.MakeInput(
+		`while x < 10 do`,
+		`	x += 1`,
+		`while true do x += 2`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeWhileStatement(
+			makeBinaryExpression(
+				"<",
+				makeIdentifier("x"),
+				makeIntegerLiteral(10),
+			),
+			makeBlockStatement(
+				makeExpressionStatement(
+					makeAssignmentExpression(
+						"+=",
+						makeIdentifier("x"),
+						makeIntegerLiteral(1),
+					),
+				),
+			),
+		),
+		makeWhileStatement(
+			makeBoolLiteral(true),
+			makeExpressionStatement(
+				makeAssignmentExpression(
+					"+=",
+					makeIdentifier("x"),
+					makeIntegerLiteral(2),
+				),
+			),
+		),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseIfStatement(t *testing.T) {
 	input := test.MakeInput(
 		`if level >= 15 == true then`,
@@ -738,6 +785,10 @@ func makeVariableStatement(dcls ...*ast.VariableDeclaration) *ast.VariableStatem
 
 func makeVariableDeclaration(ident ast.Expression, init ast.Expression) *ast.VariableDeclaration {
 	return ast.NewVariableDeclaration(ident, init)
+}
+
+func makeWhileStatement(cond ast.Expression, body ast.Statement) *ast.WhileStatement {
+	return ast.NewWhileStatement(cond, body)
 }
 
 func makeIfStatement(cond ast.Expression, cons, alt ast.Statement) *ast.IfStatement {
