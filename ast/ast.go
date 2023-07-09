@@ -154,7 +154,7 @@ func NewWhileStatement(condition Expression, body Statement) *WhileStatement {
 }
 
 type ForStatement struct {
-	// for_statement ::= FOR [expression DO statement
+	// for_statement ::= FOR [ for_statement_initializer ] SEMI [ expression ] SEMI [ expression ] DO statement
 	Type        string     `json:"type"`
 	Initializer Node       `json:"initializer"`
 	Condition   Expression `json:"condition"`
