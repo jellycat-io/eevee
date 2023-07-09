@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jellycat-io/eevee/ast"
@@ -213,10 +212,15 @@ func TestParseBinaryExpression(t *testing.T) {
 		`2 <= 2`,
 		`2 < 2 + 2`,
 		`x = 2 > 2`,
+		`2 == 2`,
+		`2 is 2`,
+		`4 != 2`,
+		`4 not 2`,
+		`2 not 2 < 2`,
+		`2 == 2 < 2 + 2`,
 	)
 
 	l := lexer.New(input, 4)
-	fmt.Println(l.Tokens)
 	p := New(l.Tokens, false)
 	ast := p.Parse()
 
@@ -311,6 +315,48 @@ func TestParseBinaryExpression(t *testing.T) {
 				">",
 				makeIntegerLiteral(2),
 				makeIntegerLiteral(2),
+			),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"==",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"==",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"!=",
+			makeIntegerLiteral(4),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"!=",
+			makeIntegerLiteral(4),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"!=",
+			makeIntegerLiteral(2),
+			makeBinaryExpression(
+				"<",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"==",
+			makeIntegerLiteral(2),
+			makeBinaryExpression(
+				"<",
+				makeIntegerLiteral(2),
+				makeBinaryExpression(
+					"+",
+					makeIntegerLiteral(2),
+					makeIntegerLiteral(2),
+				),
 			),
 		)),
 	)

@@ -178,7 +178,7 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-	left := p.parseRelationalExpression()
+	left := p.parseEqualityExpression()
 
 	if !isAssignmentOperator(p.currentToken.Type) {
 		return left
@@ -189,6 +189,10 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 		left,
 		p.parseAssignmentExpression(),
 	)
+}
+
+func (p *Parser) parseEqualityExpression() ast.Expression {
+	return p.parseBinaryExpression(p.parseRelationalExpression, token.EQ, token.NOT_EQ)
 }
 
 func (p *Parser) parseRelationalExpression() ast.Expression {
@@ -208,9 +212,15 @@ func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...tok
 
 	for _, op := range ops {
 		if p.match(op) {
-			operator := p.eat(op)
+			op_lit := p.eat(op).Literal
+			if op_lit == "is" {
+				op_lit = "=="
+			}
+			if op_lit == "not" {
+				op_lit = "!="
+			}
 			right := builder()
-			exp = ast.NewBinaryExpression(operator.Literal, exp, right)
+			exp = ast.NewBinaryExpression(op_lit, exp, right)
 			break
 		}
 	}

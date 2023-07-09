@@ -148,6 +148,7 @@ func NewAssignmentExpression(op string, left Expression, right Expression) *Assi
 }
 
 type BinaryExpression struct {
+	// equality_expression   		::= relational_expression { (EQ | NOT_EQ) relational_expression }
 	// relational_expression 		::= additive_expression { (LT | LT_EQ | GT | GT_EQ) additive_expression }
 	// additive_expression 			::= multiplicative_expression { (PLUS | MINUS) multiplicative_expression }
 	// multiplicative_expression 	::= primary_expression { (STAR | SLASH | PERCENT) primary_expression }
