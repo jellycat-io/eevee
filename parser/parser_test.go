@@ -207,6 +207,12 @@ func TestParseBinaryExpression(t *testing.T) {
 		`2 + 2 * 2`,
 		`2 * 2 + 2`,
 		`2 * (2 + 2)`,
+		`2 > 2`,
+		`2 >= 2`,
+		`2 < 2`,
+		`2 <= 2`,
+		`2 < 2 + 2`,
+		`x = 2 > 2`,
 	)
 
 	l := lexer.New(input, 4)
@@ -265,6 +271,44 @@ func TestParseBinaryExpression(t *testing.T) {
 			makeIntegerLiteral(2),
 			makeBinaryExpression(
 				"+",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			">",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			">=",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"<",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"<=",
+			makeIntegerLiteral(2),
+			makeIntegerLiteral(2),
+		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"<",
+			makeIntegerLiteral(2),
+			makeBinaryExpression(
+				"+",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+		)),
+		makeExpressionStatement(makeAssignmentExpression(
+			"=",
+			makeIdentifier("x"),
+			makeBinaryExpression(
+				">",
 				makeIntegerLiteral(2),
 				makeIntegerLiteral(2),
 			),

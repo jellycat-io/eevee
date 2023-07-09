@@ -178,7 +178,7 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-	left := p.parseAdditiveExpression()
+	left := p.parseRelationalExpression()
 
 	if !isAssignmentOperator(p.currentToken.Type) {
 		return left
@@ -189,6 +189,10 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 		left,
 		p.parseAssignmentExpression(),
 	)
+}
+
+func (p *Parser) parseRelationalExpression() ast.Expression {
+	return p.parseBinaryExpression(p.parseAdditiveExpression, token.LT, token.LT_EQ, token.GT, token.GT_EQ)
 }
 
 func (p *Parser) parseAdditiveExpression() ast.Expression {
