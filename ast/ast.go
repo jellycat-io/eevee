@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Node interface {
@@ -25,13 +26,14 @@ type Program struct {
 }
 
 func (p *Program) String() string {
-	result := "(Program("
+	var result strings.Builder
+	result.WriteString("(Program ")
 	for _, stmt := range p.Statements {
-		result += stmt.String()
+		result.WriteString(stmt.String())
+		result.WriteString(" ")
 	}
-	result += "))"
-
-	return result
+	result.WriteString(")")
+	return strings.TrimSpace(result.String())
 }
 
 func NewProgram(statements []Statement) *Program {
@@ -49,13 +51,14 @@ type BlockStatement struct {
 
 func (bs *BlockStatement) statementNode() {}
 func (bs *BlockStatement) String() string {
-	result := "BlockStatement("
+	var result strings.Builder
+	result.WriteString("(BlockStatement ")
 	for _, stmt := range bs.Statements {
-		result += stmt.String()
+		result.WriteString(stmt.String())
+		result.WriteString(" ")
 	}
-	result += ")"
-
-	return result
+	result.WriteString(")")
+	return strings.TrimSpace(result.String())
 }
 
 func NewBlockStatement(statements []Statement) *BlockStatement {
@@ -74,13 +77,14 @@ type VariableStatement struct {
 
 func (vs *VariableStatement) statementNode() {}
 func (vs *VariableStatement) String() string {
-	result := "VariableStatement("
+	var result strings.Builder
+	result.WriteString("(VariableStatement ")
 	for _, decl := range vs.Declarations {
-		result += decl.String()
+		result.WriteString(decl.String())
+		result.WriteString(" ")
 	}
-	result += ")"
-
-	return result
+	result.WriteString(")")
+	return strings.TrimSpace(result.String())
 }
 
 func NewVariableStatement(declarations []*VariableDeclaration) *VariableStatement {
@@ -98,7 +102,7 @@ type VariableDeclaration struct {
 }
 
 func (vd *VariableDeclaration) String() string {
-	return fmt.Sprintf("VariableDeclaration(%v %v)", vd.Identifier, vd.Initializer)
+	return fmt.Sprintf("(VariableDeclaration %v %v)", vd.Identifier, vd.Initializer)
 }
 
 func NewVariableDeclaration(identifier Expression, initializer Expression) *VariableDeclaration {
@@ -106,6 +110,27 @@ func NewVariableDeclaration(identifier Expression, initializer Expression) *Vari
 		Type:        "VariableDeclaration",
 		Identifier:  identifier,
 		Initializer: initializer,
+	}
+}
+
+type IfStatement struct {
+	// if_statement ::= IF expression THEN statement [ ELSE statement ]
+	Type       string     `json:"type"`
+	Condition  Expression `json:"condition"`
+	Consequent Statement  `json:"consequent"`
+	Alternate  Statement  `json:"alternate"`
+}
+
+func (is *IfStatement) statementNode() {}
+func (is *IfStatement) String() string {
+	return fmt.Sprintf("(IfStatement %v %v %v)", is.Condition, is.Consequent, is.Alternate)
+}
+func NewIfStatement(condition Expression, consequent, alternate Statement) *IfStatement {
+	return &IfStatement{
+		Type:       "IfStatement",
+		Condition:  condition,
+		Consequent: consequent,
+		Alternate:  alternate,
 	}
 }
 
@@ -117,7 +142,7 @@ type ExpressionStatement struct {
 
 func (es *ExpressionStatement) statementNode() {}
 func (es *ExpressionStatement) String() string {
-	return fmt.Sprintf("ExpressionStatement(%v)", es.Expression)
+	return fmt.Sprintf("(ExpressionStatement %v)", es.Expression)
 }
 
 func NewExpressionStatement(exp Expression) *ExpressionStatement {
@@ -135,7 +160,7 @@ type AssignmentExpression struct {
 
 func (ae *AssignmentExpression) expressionNode() {}
 func (ae *AssignmentExpression) String() string {
-	return fmt.Sprintf("AssignmentExpression(%s %v %v)", ae.Operator, ae.Left, ae.Right)
+	return fmt.Sprintf("(AssignmentExpression %s %v %v)", ae.Operator, ae.Left, ae.Right)
 }
 
 func NewAssignmentExpression(op string, left Expression, right Expression) *AssignmentExpression {
@@ -158,7 +183,7 @@ type LogicalExpression struct {
 
 func (le *LogicalExpression) expressionNode() {}
 func (le *LogicalExpression) String() string {
-	return fmt.Sprintf("LogicalExpression(%s %v %v)", le.Operator, le.Left, le.Right)
+	return fmt.Sprintf("(LogicalExpression %s %v %v)", le.Operator, le.Left, le.Right)
 }
 
 func NewLogicalExpression(op string, left, right Expression) *LogicalExpression {
@@ -183,7 +208,7 @@ type BinaryExpression struct {
 
 func (be *BinaryExpression) expressionNode() {}
 func (be *BinaryExpression) String() string {
-	return fmt.Sprintf("BinaryExpression(%s %v %v)", be.Operator, be.Left, be.Right)
+	return fmt.Sprintf("(BinaryExpression %s %v %v)", be.Operator, be.Left, be.Right)
 }
 
 func NewBinaryExpression(op string, left, right Expression) *BinaryExpression {
@@ -202,8 +227,9 @@ type IntegerLiteral struct {
 }
 
 func (il *IntegerLiteral) expressionNode() {}
+
 func (il *IntegerLiteral) String() string {
-	return fmt.Sprintf("IntegerLiteral(%d)", il.Value)
+	return fmt.Sprintf("(IntegerLiteral %d)", il.Value)
 }
 
 func NewIntegerLiteral(value int64) *IntegerLiteral {
@@ -218,7 +244,7 @@ type FloatLiteral struct {
 
 func (fl *FloatLiteral) expressionNode() {}
 func (fl *FloatLiteral) String() string {
-	return fmt.Sprintf("FloatLiteral(%v)", fl.Value)
+	return fmt.Sprintf("(FloatLiteral %v)", fl.Value)
 }
 
 func NewFloatLiteral(value float64) *FloatLiteral {
@@ -233,7 +259,7 @@ type StringLiteral struct {
 
 func (sl *StringLiteral) expressionNode() {}
 func (sl *StringLiteral) String() string {
-	return fmt.Sprintf("StringLiteral(%s)", sl.Value)
+	return fmt.Sprintf("(StringLiteral %s)", sl.Value)
 }
 
 func NewStringLiteral(value string) *StringLiteral {
@@ -248,7 +274,7 @@ type BoolLiteral struct {
 
 func (bl *BoolLiteral) expressionNode() {}
 func (bl *BoolLiteral) String() string {
-	return fmt.Sprintf("BoolLiteral(%t)", bl.Value)
+	return fmt.Sprintf("(BoolLiteral %t)", bl.Value)
 }
 
 func NewBoolLiteral(value bool) *BoolLiteral {
@@ -263,7 +289,7 @@ type NullLiteral struct {
 
 func (nl *NullLiteral) expressionNode() {}
 func (nl *NullLiteral) String() string {
-	return fmt.Sprintf("NullLiteral(%v)", nl.Value)
+	return fmt.Sprintf("(NullLiteral %v)", nl.Value)
 }
 
 func NewNullLiteral() *NullLiteral {
@@ -278,7 +304,7 @@ type Identifier struct {
 
 func (i *Identifier) expressionNode() {}
 func (i *Identifier) String() string {
-	return fmt.Sprintf("Identifier(%s)", i.Name)
+	return fmt.Sprintf("(Identifier %s)", i.Name)
 }
 
 func NewIdentifier(name string) *Identifier {

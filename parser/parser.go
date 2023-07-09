@@ -87,6 +87,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = p.parseBlockStatement()
 	case token.LET:
 		stmt = p.parseVariableStatement()
+	case token.IF:
+		stmt = p.parseIfStatement()
 	default:
 		stmt = p.parseExpressionStatement()
 	}
@@ -145,6 +147,33 @@ func (p *Parser) parseVariableDeclaration() *ast.VariableDeclaration {
 func (p *Parser) parseVariableInitializer() ast.Expression {
 	p.eat(token.ASSIGN)
 	return p.parseAssignmentExpression()
+}
+
+func (p *Parser) parseIfStatement() *ast.IfStatement {
+	p.eat(token.IF)
+	condition := p.parseExpression()
+	p.eat(token.THEN)
+
+	if p.match(token.EOL) {
+		p.eat(token.EOL)
+	}
+
+	consequent := p.parseStatement()
+
+	var alternate ast.Statement
+	if p.match(token.ELSE) {
+		p.eat(token.ELSE)
+
+		if p.match(token.EOL) {
+			p.eat(token.EOL)
+		}
+
+		alternate = p.parseStatement()
+	} else {
+		alternate = nil
+	}
+
+	return ast.NewIfStatement(condition, consequent, alternate)
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

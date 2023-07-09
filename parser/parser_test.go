@@ -196,6 +196,132 @@ func TestParseAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestParseIfStatement(t *testing.T) {
+	input := test.MakeInput(
+		`if level >= 15 == true then`,
+		`	pokemon = "ivysaur"`,
+		`else`,
+		`	pokemon = "bulbasaur"`,
+		`if (eevee not null) then`,
+		`	if evo_cond is solar_stone then`,
+		`		eevee = "leafeon"`,
+		`	if evo_cond == friendship_plus_exchange then eevee = "sylveon"`,
+		`	if evo_cond == friendship_at_night then eevee = "umbreon" else eevee = "espeon"`,
+		`else eevee = "missingno"`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeIfStatement(
+			makeBinaryExpression(
+				"==",
+				makeBinaryExpression(
+					">=",
+					makeIdentifier("level"),
+					makeIntegerLiteral(15),
+				),
+				makeBoolLiteral(true),
+			),
+			makeBlockStatement(
+				makeExpressionStatement(
+					makeAssignmentExpression(
+						"=",
+						makeIdentifier("pokemon"),
+						makeStringLiteral("ivysaur"),
+					),
+				),
+			),
+			makeBlockStatement(
+				makeExpressionStatement(
+					makeAssignmentExpression(
+						"=",
+						makeIdentifier("pokemon"),
+						makeStringLiteral("bulbasaur"),
+					),
+				),
+			),
+		),
+		makeIfStatement(
+			makeBinaryExpression(
+				"!=",
+				makeIdentifier("eevee"),
+				makeNullLiteral(),
+			),
+			makeBlockStatement(
+				makeIfStatement(
+					makeBinaryExpression(
+						"==",
+						makeIdentifier("evo_cond"),
+						makeIdentifier("solar_stone"),
+					),
+					makeBlockStatement(
+						makeExpressionStatement(
+							makeAssignmentExpression(
+								"=",
+								makeIdentifier("eevee"),
+								makeStringLiteral("leafeon"),
+							),
+						),
+					),
+					nil,
+				),
+				makeIfStatement(
+					makeBinaryExpression(
+						"==",
+						makeIdentifier("evo_cond"),
+						makeIdentifier("friendship_plus_exchange"),
+					),
+					makeExpressionStatement(
+						makeAssignmentExpression(
+							"=",
+							makeIdentifier("eevee"),
+							makeStringLiteral("sylveon"),
+						),
+					),
+					nil,
+				),
+				makeIfStatement(
+					makeBinaryExpression(
+						"==",
+						makeIdentifier("evo_cond"),
+						makeIdentifier("friendship_at_night"),
+					),
+					makeExpressionStatement(
+						makeAssignmentExpression(
+							"=",
+							makeIdentifier("eevee"),
+							makeStringLiteral("umbreon"),
+						),
+					),
+					makeExpressionStatement(
+						makeAssignmentExpression(
+							"=",
+							makeIdentifier("eevee"),
+							makeStringLiteral("espeon"),
+						),
+					),
+				),
+			),
+			makeExpressionStatement(
+				makeAssignmentExpression(
+					"=",
+					makeIdentifier("eevee"),
+					makeStringLiteral("missingno"),
+				),
+			),
+		),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseLogicalExpression(t *testing.T) {
 	input := test.MakeInput(
 		`5 == 5 and 5 < 10`,
@@ -209,6 +335,8 @@ func TestParseLogicalExpression(t *testing.T) {
 	l := lexer.New(input, 4)
 	p := New(l.Tokens, false)
 	ast := p.Parse()
+
+	checkParserErrors(t, p)
 
 	expectedAst := makeProgram(
 		makeExpressionStatement(makeLogicalExpression(
@@ -548,6 +676,10 @@ func makeVariableStatement(dcls ...*ast.VariableDeclaration) *ast.VariableStatem
 
 func makeVariableDeclaration(ident ast.Expression, init ast.Expression) *ast.VariableDeclaration {
 	return ast.NewVariableDeclaration(ident, init)
+}
+
+func makeIfStatement(cond ast.Expression, cons, alt ast.Statement) *ast.IfStatement {
+	return ast.NewIfStatement(cond, cons, alt)
 }
 
 func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {
