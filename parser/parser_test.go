@@ -62,6 +62,64 @@ func TestParseBlockStatement(t *testing.T) {
 	}
 }
 
+func TestParseFunctionDeclaration(t *testing.T) {
+	input := test.MakeInput(
+		`fn square(x)`,
+		`	return x * x`,
+		`fn add(x, y) return x + y`,
+		`fn nothing() return`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeFunctionDeclaration(
+			*makeIdentifier("square"),
+			makeFunctionParameters(
+				*makeIdentifier("x"),
+			),
+			makeBlockStatement(
+				makeReturnStatement(
+					makeBinaryExpression(
+						"*",
+						makeIdentifier("x"),
+						makeIdentifier("x"),
+					),
+				),
+			),
+		),
+		makeFunctionDeclaration(
+			*makeIdentifier("add"),
+			makeFunctionParameters(
+				*makeIdentifier("x"),
+				*makeIdentifier("y"),
+			),
+			makeReturnStatement(
+				makeBinaryExpression(
+					"+",
+					makeIdentifier("x"),
+					makeIdentifier("y"),
+				),
+			),
+		),
+		makeFunctionDeclaration(
+			*makeIdentifier("nothing"),
+			makeFunctionParameters(),
+			makeReturnStatement(
+				makeNullLiteral(),
+			),
+		),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseVariableStatement(t *testing.T) {
 	input := test.MakeInput(
 		`let pokemon = "eevee"`,
@@ -875,6 +933,26 @@ func makeBlockStatement(stmts ...ast.Statement) *ast.BlockStatement {
 	s := []ast.Statement{}
 	s = append(s, stmts...)
 	return ast.NewBlockStatement(s)
+}
+
+func makeFunctionDeclaration(name ast.Identifier, params []ast.Identifier, body ast.Statement) *ast.FunctionDeclaration {
+	return ast.NewFunctionDeclaration(name, params, body)
+}
+
+func makeFunctionParameters(params ...ast.Identifier) []ast.Identifier {
+	p := make([]ast.Identifier, 0)
+
+	if len(params) == 0 {
+		return p
+	}
+
+	p = append(p, params...)
+
+	return p
+}
+
+func makeReturnStatement(value ast.Expression) *ast.ReturnStatement {
+	return ast.NewReturnStatement(value)
 }
 
 func makeVariableStatement(dcls ...*ast.VariableDeclaration) *ast.VariableStatement {

@@ -68,6 +68,55 @@ func NewBlockStatement(statements []Statement) *BlockStatement {
 	}
 }
 
+type FunctionDeclaration struct {
+	// function_declaration ::= FUNCTION identifier LPAREN parameters RPAREN statement
+	// parameters           ::= identifier { COMMA identifier }
+	Type       string       `json:"type"`
+	Name       Identifier   `json:"name"`
+	Parameters []Identifier `json:"parameters"`
+	Body       Statement    `json:"body"`
+}
+
+func (fd *FunctionDeclaration) statementNode() {}
+func (fd *FunctionDeclaration) String() string {
+	var result strings.Builder
+	result.WriteString("(FunctionDeclaration ")
+	result.WriteString(fd.Name.String() + " ")
+	for _, param := range fd.Parameters {
+		result.WriteString(param.String())
+		result.WriteString(" ")
+	}
+	result.WriteString(fd.Body.String())
+	result.WriteString(")")
+	return strings.TrimSpace(result.String())
+}
+
+func NewFunctionDeclaration(name Identifier, parameters []Identifier, body Statement) *FunctionDeclaration {
+	return &FunctionDeclaration{
+		Type:       "FunctionDeclaration",
+		Name:       name,
+		Parameters: parameters,
+		Body:       body,
+	}
+}
+
+type ReturnStatement struct {
+	Type  string     `json:"type"`
+	Value Expression `json:"value"`
+}
+
+func (rs *ReturnStatement) statementNode() {}
+func (rs *ReturnStatement) String() string {
+	return fmt.Sprintf("(ReturnStatement %v)", rs.Value)
+}
+
+func NewReturnStatement(value Expression) *ReturnStatement {
+	return &ReturnStatement{
+		Type:  "ReturnStatement",
+		Value: value,
+	}
+}
+
 type VariableStatement struct {
 	// variable_statement ::= LET variable_declaration_list
 	// variable_declaration_list ::= variable_declaration { COMMA variable_declaration }

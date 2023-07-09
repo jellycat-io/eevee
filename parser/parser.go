@@ -101,6 +101,10 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = p.parseIfStatement()
 	case token.WHILE, token.DO, token.FOR:
 		stmt = p.parseIterationStatement()
+	case token.FUNCTION:
+		stmt = p.parseFunctionDeclaration()
+	case token.RETURN:
+		stmt = p.parseReturnStatement()
 	default:
 		stmt = p.parseExpressionStatement()
 	}
@@ -123,6 +127,46 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	p.eat(token.DEDENT)
 
 	return ast.NewBlockStatement(stmts)
+}
+
+func (p *Parser) parseFunctionDeclaration() *ast.FunctionDeclaration {
+	p.eat(token.FUNCTION)
+	name := *p.parseIdentifier()
+	p.eat(token.LPAREN)
+
+	params := p.parseFunctionParameters()
+	p.eat(token.RPAREN)
+
+	if p.match(token.EOL) {
+		p.eat(token.EOL)
+	}
+
+	body := p.parseStatement()
+
+	return ast.NewFunctionDeclaration(name, params, body)
+}
+
+func (p *Parser) parseFunctionParameters() []ast.Identifier {
+	params := make([]ast.Identifier, 0)
+
+	for !p.match(token.RPAREN) {
+		params = append(params, *p.parseIdentifier())
+		for p.match(token.COMMA) {
+			p.eat(token.COMMA)
+			params = append(params, *p.parseIdentifier())
+		}
+	}
+
+	return params
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	p.eat(token.RETURN)
+	if p.match(token.EOL) || p.match(token.DEDENT) || p.isAtEnd() {
+		return ast.NewReturnStatement(nilExpression)
+	}
+
+	return ast.NewReturnStatement(p.parseExpression())
 }
 
 func (p *Parser) parseVariableStatement() *ast.VariableStatement {
