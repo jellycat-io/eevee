@@ -82,6 +82,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.INDENT:
 		stmt = p.parseBlockStatement()
+	case token.LET:
+		stmt = p.parseVariableStatement()
 	default:
 		stmt = p.parseExpressionStatement()
 	}
@@ -104,6 +106,42 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	p.eat(token.DEDENT)
 
 	return ast.NewBlockStatement(stmts)
+}
+
+func (p *Parser) parseVariableStatement() *ast.VariableStatement {
+	p.eat(token.LET)
+	declarations := p.parseVariableDeclarationList()
+
+	return ast.NewVariableStatement(declarations)
+}
+
+func (p *Parser) parseVariableDeclarationList() []*ast.VariableDeclaration {
+	dcls := []*ast.VariableDeclaration{p.parseVariableDeclaration()}
+
+	for p.match(token.COMMA) {
+		p.eat(token.COMMA)
+		dcls = append(dcls, p.parseVariableDeclaration())
+	}
+
+	return dcls
+}
+
+func (p *Parser) parseVariableDeclaration() *ast.VariableDeclaration {
+	ident := p.parseIdentifier()
+	var init ast.Expression
+
+	if !p.match(token.COMMA) && p.match(token.ASSIGN) {
+		init = p.parseVariableInitializer()
+	} else {
+		init = nil
+	}
+
+	return ast.NewVariableDeclaration(ident, init)
+}
+
+func (p *Parser) parseVariableInitializer() ast.Expression {
+	p.eat(token.ASSIGN)
+	return p.parseAssignmentExpression()
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

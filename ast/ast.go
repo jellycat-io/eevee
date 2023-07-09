@@ -65,6 +65,50 @@ func NewBlockStatement(statements []Statement) *BlockStatement {
 	}
 }
 
+type VariableStatement struct {
+	// variable_statement ::= LET variable_declaration_list
+	// variable_declaration_list ::= variable_declaration { COMMA variable_declaration }
+	Type         string                 `json:"type"`
+	Declarations []*VariableDeclaration `json:"declarations"`
+}
+
+func (vs *VariableStatement) statementNode() {}
+func (vs *VariableStatement) String() string {
+	result := "VariableStatement("
+	for _, decl := range vs.Declarations {
+		result += decl.String()
+	}
+	result += ")"
+
+	return result
+}
+
+func NewVariableStatement(declarations []*VariableDeclaration) *VariableStatement {
+	return &VariableStatement{
+		Type:         "VariableStatement",
+		Declarations: declarations,
+	}
+}
+
+type VariableDeclaration struct {
+	// variable_declaration ::= identifier [ ASSIGN assignment_expression ]
+	Type        string     `json:"type"`
+	Identifier  Expression `json:"identifier"`
+	Initializer Expression `json:"initializer"`
+}
+
+func (vd *VariableDeclaration) String() string {
+	return fmt.Sprintf("VariableDeclaration(%v %v)", vd.Identifier, vd.Initializer)
+}
+
+func NewVariableDeclaration(identifier Expression, initializer Expression) *VariableDeclaration {
+	return &VariableDeclaration{
+		Type:        "VariableDeclaration",
+		Identifier:  identifier,
+		Initializer: initializer,
+	}
+}
+
 type ExpressionStatement struct {
 	// expression_statement ::= expression
 	Type       string     `json:"type"`
@@ -133,7 +177,7 @@ type IntegerLiteral struct {
 }
 
 func (il *IntegerLiteral) expressionNode() {}
-func (il IntegerLiteral) String() string {
+func (il *IntegerLiteral) String() string {
 	return fmt.Sprintf("IntegerLiteral(%d)", il.Value)
 }
 
@@ -148,7 +192,7 @@ type FloatLiteral struct {
 }
 
 func (fl *FloatLiteral) expressionNode() {}
-func (fl FloatLiteral) String() string {
+func (fl *FloatLiteral) String() string {
 	return fmt.Sprintf("FloatLiteral(%v)", fl.Value)
 }
 
@@ -163,7 +207,7 @@ type StringLiteral struct {
 }
 
 func (sl *StringLiteral) expressionNode() {}
-func (sl StringLiteral) String() string {
+func (sl *StringLiteral) String() string {
 	return fmt.Sprintf("StringLiteral(%s)", sl.Value)
 }
 
@@ -178,7 +222,7 @@ type Identifier struct {
 }
 
 func (i *Identifier) expressionNode() {}
-func (i Identifier) String() string {
+func (i *Identifier) String() string {
 	return fmt.Sprintf("Identifier(%s)", i.Name)
 }
 

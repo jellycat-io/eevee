@@ -33,7 +33,7 @@ func TestParseProgram(t *testing.T) {
 	}
 }
 
-func TestParseBlock(t *testing.T) {
+func TestParseBlockStatement(t *testing.T) {
 	input := test.MakeInput(
 		`42`,
 		`	"eevee"`,
@@ -56,6 +56,74 @@ func TestParseBlock(t *testing.T) {
 			),
 		),
 		makeExpressionStatement(makeStringLiteral("flareon")),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
+func TestParseVariableStatement(t *testing.T) {
+	input := test.MakeInput(
+		`let pokemon = "eevee"`,
+		`	let pokemon = eevee`,
+		`let x, y`,
+		`let x, y = 42`,
+		`let x = 40 + 2`,
+		`let x = y = 42`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeVariableStatement(makeVariableDeclaration(
+			makeIdentifier("pokemon"),
+			makeStringLiteral("eevee"),
+		)),
+		makeBlockStatement(makeVariableStatement(makeVariableDeclaration(
+			makeIdentifier("pokemon"),
+			makeIdentifier("eevee"),
+		))),
+		makeVariableStatement(
+			makeVariableDeclaration(
+				makeIdentifier("x"),
+				nil,
+			),
+			makeVariableDeclaration(
+				makeIdentifier("y"),
+				nil,
+			),
+		),
+		makeVariableStatement(
+			makeVariableDeclaration(
+				makeIdentifier("x"),
+				nil,
+			),
+			makeVariableDeclaration(
+				makeIdentifier("y"),
+				makeIntegerLiteral(42),
+			),
+		),
+		makeVariableStatement(makeVariableDeclaration(
+			makeIdentifier("x"),
+			makeBinaryExpression(
+				"+",
+				makeIntegerLiteral(40),
+				makeIntegerLiteral(2),
+			),
+		)),
+		makeVariableStatement(makeVariableDeclaration(
+			makeIdentifier("x"),
+			makeAssignmentExpression(
+				"=",
+				makeIdentifier("y"),
+				makeIntegerLiteral(42),
+			),
+		)),
 	)
 
 	if ast.String() != expectedAst.String() {
@@ -242,6 +310,16 @@ func makeBlockStatement(stmts ...ast.Statement) *ast.BlockStatement {
 	s := []ast.Statement{}
 	s = append(s, stmts...)
 	return ast.NewBlockStatement(s)
+}
+
+func makeVariableStatement(dcls ...*ast.VariableDeclaration) *ast.VariableStatement {
+	d := []*ast.VariableDeclaration{}
+	d = append(d, dcls...)
+	return ast.NewVariableStatement(d)
+}
+
+func makeVariableDeclaration(ident ast.Expression, init ast.Expression) *ast.VariableDeclaration {
+	return ast.NewVariableDeclaration(ident, init)
 }
 
 func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {
