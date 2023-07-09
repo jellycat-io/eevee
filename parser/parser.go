@@ -178,7 +178,7 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-	left := p.parseEqualityExpression()
+	left := p.parseLogicalOrExpression()
 
 	if !isAssignmentOperator(p.currentToken.Type) {
 		return left
@@ -189,6 +189,35 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 		left,
 		p.parseAssignmentExpression(),
 	)
+}
+
+func (p *Parser) parseLogicalOrExpression() ast.Expression {
+	return p.parseLogicalExpression(p.parseLogicalAndExpression, token.OR)
+}
+
+func (p *Parser) parseLogicalAndExpression() ast.Expression {
+	return p.parseLogicalExpression(p.parseEqualityExpression, token.AND)
+}
+
+func (p *Parser) parseLogicalExpression(builder func() ast.Expression, ops ...token.TokenType) ast.Expression {
+	exp := builder()
+
+	for _, op := range ops {
+		if p.match(op) {
+			op_lit := p.eat(op).Literal
+			if op_lit == "and" {
+				op_lit = "&&"
+			}
+			if op_lit == "or" {
+				op_lit = "||"
+			}
+			right := builder()
+			exp = ast.NewLogicalExpression(op_lit, exp, right)
+			break
+		}
+	}
+
+	return exp
 }
 
 func (p *Parser) parseEqualityExpression() ast.Expression {

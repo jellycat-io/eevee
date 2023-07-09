@@ -147,6 +147,29 @@ func NewAssignmentExpression(op string, left Expression, right Expression) *Assi
 	}
 }
 
+type LogicalExpression struct {
+	// logical_or_expression   ::= logical_and_expression { OR logical_and_expression }
+	// logical_and_expression   ::= equality_expression { AND equality_expression }
+	Type     string     `json:"type"`
+	Operator string     `json:"operator"`
+	Left     Expression `json:"left"`
+	Right    Expression `json:"right"`
+}
+
+func (le *LogicalExpression) expressionNode() {}
+func (le *LogicalExpression) String() string {
+	return fmt.Sprintf("LogicalExpression(%s %v %v)", le.Operator, le.Left, le.Right)
+}
+
+func NewLogicalExpression(op string, left, right Expression) *LogicalExpression {
+	return &LogicalExpression{
+		Type:     "LogicalExpression",
+		Operator: op,
+		Left:     left,
+		Right:    right,
+	}
+}
+
 type BinaryExpression struct {
 	// equality_expression   		::= relational_expression { (EQ | NOT_EQ) relational_expression }
 	// relational_expression 		::= additive_expression { (LT | LT_EQ | GT | GT_EQ) additive_expression }

@@ -196,6 +196,138 @@ func TestParseAssignmentExpression(t *testing.T) {
 	}
 }
 
+func TestParseLogicalExpression(t *testing.T) {
+	input := test.MakeInput(
+		`5 == 5 and 5 < 10`,
+		`5 == 5 or 5 < 10`,
+		`(5 == 5 && 5 < 10) and 5 > 1`,
+		`(5 == 5 and 5 < 10) || 5 > 1`,
+		`(5 == 5 or 5 < 10) || 5 > 1`,
+		`(5 == 5 || 5 < 10) && 5 > 1`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
+	ast := p.Parse()
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeLogicalExpression(
+			"&&",
+			makeBinaryExpression(
+				"==",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(5),
+			),
+			makeBinaryExpression(
+				"<",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(10),
+			),
+		)),
+		makeExpressionStatement(makeLogicalExpression(
+			"||",
+			makeBinaryExpression(
+				"==",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(5),
+			),
+			makeBinaryExpression(
+				"<",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(10),
+			),
+		)),
+		makeExpressionStatement(makeLogicalExpression(
+			"&&",
+			makeLogicalExpression(
+				"&&",
+				makeBinaryExpression(
+					"==",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(5),
+				),
+				makeBinaryExpression(
+					"<",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(10),
+				),
+			),
+			makeBinaryExpression(
+				">",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(1),
+			),
+		)),
+		makeExpressionStatement(makeLogicalExpression(
+			"||",
+			makeLogicalExpression(
+				"&&",
+				makeBinaryExpression(
+					"==",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(5),
+				),
+				makeBinaryExpression(
+					"<",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(10),
+				),
+			),
+			makeBinaryExpression(
+				">",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(1),
+			),
+		)),
+		makeExpressionStatement(makeLogicalExpression(
+			"||",
+			makeLogicalExpression(
+				"||",
+				makeBinaryExpression(
+					"==",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(5),
+				),
+				makeBinaryExpression(
+					"<",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(10),
+				),
+			),
+			makeBinaryExpression(
+				">",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(1),
+			),
+		)),
+		makeExpressionStatement(makeLogicalExpression(
+			"&&",
+			makeLogicalExpression(
+				"||",
+				makeBinaryExpression(
+					"==",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(5),
+				),
+				makeBinaryExpression(
+					"<",
+					makeIntegerLiteral(5),
+					makeIntegerLiteral(10),
+				),
+			),
+			makeBinaryExpression(
+				">",
+				makeIntegerLiteral(5),
+				makeIntegerLiteral(1),
+			),
+		)),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseBinaryExpression(t *testing.T) {
 	input := test.MakeInput(
 		`2 + 2`,
@@ -424,6 +556,10 @@ func makeExpressionStatement(e ast.Expression) *ast.ExpressionStatement {
 
 func makeAssignmentExpression(op string, l, r ast.Expression) *ast.AssignmentExpression {
 	return ast.NewAssignmentExpression(op, l, r)
+}
+
+func makeLogicalExpression(op string, l, r ast.Expression) *ast.LogicalExpression {
+	return ast.NewLogicalExpression(op, l, r)
 }
 
 func makeBinaryExpression(op string, l, r ast.Expression) *ast.BinaryExpression {
