@@ -153,6 +153,25 @@ func NewWhileStatement(condition Expression, body Statement) *WhileStatement {
 	}
 }
 
+type DoWhileStatement struct {
+	// do_while_statement ::= DO statement WHILE expression
+	Type      string     `json:"type"`
+	Condition Expression `json:"condition"`
+	Body      Statement  `json:"body"`
+}
+
+func (dws *DoWhileStatement) statementNode() {}
+func (dws *DoWhileStatement) String() string {
+	return fmt.Sprintf("(DoWhileStatement %v %v)", dws.Condition, dws.Body)
+}
+func NewDoWhileStatement(condition Expression, body Statement) *DoWhileStatement {
+	return &DoWhileStatement{
+		Type:      "DoWhileStatement",
+		Condition: condition,
+		Body:      body,
+	}
+}
+
 type ForStatement struct {
 	// for_statement ::= FOR [ for_statement_initializer ] SEMI [ expression ] SEMI [ expression ] DO statement
 	Type        string     `json:"type"`

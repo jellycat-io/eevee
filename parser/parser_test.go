@@ -201,6 +201,7 @@ func TestParseWhileStatement(t *testing.T) {
 		`while x < 10 do`,
 		`	x += 1`,
 		`while true do x += 2`,
+		`do x += 1 while x < 10`,
 	)
 
 	l := lexer.New(input, 4)
@@ -233,6 +234,20 @@ func TestParseWhileStatement(t *testing.T) {
 					"+=",
 					makeIdentifier("x"),
 					makeIntegerLiteral(2),
+				),
+			),
+		),
+		makeDoWhileStatement(
+			makeBinaryExpression(
+				"<",
+				makeIdentifier("x"),
+				makeIntegerLiteral(10),
+			),
+			makeExpressionStatement(
+				makeAssignmentExpression(
+					"+=",
+					makeIdentifier("x"),
+					makeIntegerLiteral(1),
 				),
 			),
 		),
@@ -874,6 +889,10 @@ func makeVariableDeclaration(ident ast.Expression, init ast.Expression) *ast.Var
 
 func makeWhileStatement(cond ast.Expression, body ast.Statement) *ast.WhileStatement {
 	return ast.NewWhileStatement(cond, body)
+}
+
+func makeDoWhileStatement(cond ast.Expression, body ast.Statement) *ast.DoWhileStatement {
+	return ast.NewDoWhileStatement(cond, body)
 }
 
 func makeForStatement(init ast.Node, cond, iter ast.Expression, body ast.Statement) *ast.ForStatement {

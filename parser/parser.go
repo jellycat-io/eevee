@@ -99,7 +99,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = p.parseVariableStatement()
 	case token.IF:
 		stmt = p.parseIfStatement()
-	case token.WHILE, token.FOR:
+	case token.WHILE, token.DO, token.FOR:
 		stmt = p.parseIterationStatement()
 	default:
 		stmt = p.parseExpressionStatement()
@@ -165,6 +165,8 @@ func (p *Parser) parseIterationStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.WHILE:
 		return p.parseWhileStatement()
+	case token.DO:
+		return p.parseDoWhileStatement()
 	case token.FOR:
 		return p.parseForStatement()
 	default:
@@ -182,6 +184,18 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 	body := p.parseStatement()
 
 	return ast.NewWhileStatement(cond, body)
+}
+
+func (p *Parser) parseDoWhileStatement() *ast.DoWhileStatement {
+	p.eat(token.DO)
+	body := p.parseStatement()
+	p.eat(token.WHILE)
+	if p.match(token.EOL) {
+		p.eat(token.EOL)
+	}
+	cond := p.parseExpression()
+
+	return ast.NewDoWhileStatement(cond, body)
 }
 
 func (p *Parser) parseForStatement() *ast.ForStatement {

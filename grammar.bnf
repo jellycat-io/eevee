@@ -7,6 +7,7 @@ variable_declaration_list   ::= variable_declaration { COMMA variable_declaratio
 variable_declaration        ::= identifier [ ASSIGN assignment_expression ]
 if_statement                ::= IF expression THEN statement [ ELSE statement ]
 while_statement             ::= WHILE expression DO statement
+do_while_statement          ::= DO statement WHILE expression
 for_statement               ::= FOR [ for_statement_initializer ] SEMI [ expression ] SEMI [ expression ] DO statement
 expression_statement        ::= expression
 expression                  ::= assignment_expression
