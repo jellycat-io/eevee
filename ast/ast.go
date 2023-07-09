@@ -231,7 +231,7 @@ func NewBoolLiteral(value bool) *BoolLiteral {
 }
 
 type NullLiteral struct {
-	// bool_literal ::= (TRUE | FALSE)
+	// null_literal ::= NULL
 	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
 }
