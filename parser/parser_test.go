@@ -281,6 +281,9 @@ func TestParseLiteral(t *testing.T) {
 		`42`,
 		`"eevee"`,
 		`3.14`,
+		`true`,
+		`false`,
+		`null`,
 	)
 
 	l := lexer.New(input, 4)
@@ -293,6 +296,9 @@ func TestParseLiteral(t *testing.T) {
 		makeExpressionStatement(makeIntegerLiteral(42)),
 		makeExpressionStatement(makeStringLiteral("eevee")),
 		makeExpressionStatement(makeFloatLiteral(3.14)),
+		makeExpressionStatement(makeBoolLiteral(true)),
+		makeExpressionStatement(makeBoolLiteral(false)),
+		makeExpressionStatement(makeNullLiteral()),
 	)
 
 	if ast.String() != expectedAst.String() {
@@ -344,6 +350,14 @@ func makeFloatLiteral(n float64) *ast.FloatLiteral {
 
 func makeStringLiteral(s string) *ast.StringLiteral {
 	return ast.NewStringLiteral(s)
+}
+
+func makeBoolLiteral(b bool) *ast.BoolLiteral {
+	return ast.NewBoolLiteral(b)
+}
+
+func makeNullLiteral() *ast.NullLiteral {
+	return ast.NewNullLiteral()
 }
 
 func makeIdentifier(name string) *ast.Identifier {

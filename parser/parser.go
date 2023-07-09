@@ -12,6 +12,9 @@ var literalTypes = []token.TokenType{
 	token.INT,
 	token.FLOAT,
 	token.STRING,
+	token.TRUE,
+	token.FALSE,
+	token.NULL,
 }
 
 var complexAssignmentOps = []token.TokenType{
@@ -246,6 +249,12 @@ func (p *Parser) parseLiteral() ast.Expression {
 		return p.parseFloatLiteral()
 	case token.STRING:
 		return p.parseStringLiteral()
+	case token.TRUE:
+		return p.parseBoolLiteral(true)
+	case token.FALSE:
+		return p.parseBoolLiteral(false)
+	case token.NULL:
+		return p.parseNullLiteral()
 	default:
 		p.error(fmt.Errorf("[%d:%d] Unexpected token: %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
 		p.advance()
@@ -279,6 +288,22 @@ func (p *Parser) parseStringLiteral() *ast.StringLiteral {
 	tok := p.eat(token.STRING)
 
 	return ast.NewStringLiteral(tok.Literal[1 : len(tok.Literal)-1])
+}
+
+func (p *Parser) parseBoolLiteral(value bool) *ast.BoolLiteral {
+	switch value {
+	case true:
+		p.eat(token.TRUE)
+	case false:
+		p.eat(token.FALSE)
+	}
+
+	return ast.NewBoolLiteral(value)
+}
+
+func (p *Parser) parseNullLiteral() *ast.NullLiteral {
+	p.eat(token.NULL)
+	return ast.NewNullLiteral()
 }
 
 func (p *Parser) parseAssignmentOperator() token.Token {

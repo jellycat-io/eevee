@@ -66,7 +66,7 @@ const (
 	THEN           = TokenType("THEN")
 	ELSE           = TokenType("ELSE")
 	RETURN         = TokenType("RETURN")
-	NIL            = TokenType("NIL")
+	NULL           = TokenType("NULL")
 	INT            = TokenType("INT")
 	FLOAT          = TokenType("FLOAT")
 	STRING         = TokenType("STRING")
@@ -82,7 +82,7 @@ var Keywords = map[string]TokenType{
 	"import": IMPORT,
 	"let":    LET,
 	"module": MODULE,
-	"nil":    NIL,
+	"null":   NULL,
 	"not":    NOT_EQ,
 	"or":     OR,
 	"return": RETURN,

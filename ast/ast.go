@@ -215,6 +215,36 @@ func NewStringLiteral(value string) *StringLiteral {
 	return &StringLiteral{Type: "StringLiteral", Value: value}
 }
 
+type BoolLiteral struct {
+	// bool_literal ::= (TRUE | FALSE)
+	Type  string `json:"type"`
+	Value bool   `json:"value"`
+}
+
+func (bl *BoolLiteral) expressionNode() {}
+func (bl *BoolLiteral) String() string {
+	return fmt.Sprintf("BoolLiteral(%t)", bl.Value)
+}
+
+func NewBoolLiteral(value bool) *BoolLiteral {
+	return &BoolLiteral{Type: "BoolLiteral", Value: value}
+}
+
+type NullLiteral struct {
+	// bool_literal ::= (TRUE | FALSE)
+	Type  string      `json:"type"`
+	Value interface{} `json:"value"`
+}
+
+func (nl *NullLiteral) expressionNode() {}
+func (nl *NullLiteral) String() string {
+	return fmt.Sprintf("NullLiteral(%v)", nl.Value)
+}
+
+func NewNullLiteral() *NullLiteral {
+	return &NullLiteral{Type: "NullLiteral", Value: nil}
+}
+
 type Identifier struct {
 	// identifier ::= IDENT
 	Type string `json:"type"`
