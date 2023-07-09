@@ -243,6 +243,91 @@ func TestParseWhileStatement(t *testing.T) {
 	}
 }
 
+func TestParseForStatement(t *testing.T) {
+	input := test.MakeInput(
+		`for let x = 1; x < 10; x += 1 do`,
+		`	y += 1`,
+		`for x = 1; x < 10; x += 1 do y += 1`,
+		`for ;; do y += 1`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, false)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeForStatement(
+			makeVariableStatement(
+				makeVariableDeclaration(
+					makeIdentifier("x"),
+					makeIntegerLiteral(1),
+				),
+			),
+			makeBinaryExpression(
+				"<",
+				makeIdentifier("x"),
+				makeIntegerLiteral(10),
+			),
+			makeAssignmentExpression(
+				"+=",
+				makeIdentifier("x"),
+				makeIntegerLiteral(1),
+			),
+			makeBlockStatement(
+				makeExpressionStatement(
+					makeAssignmentExpression(
+						"+=",
+						makeIdentifier("y"),
+						makeIntegerLiteral(1),
+					),
+				),
+			),
+		),
+		makeForStatement(
+			makeAssignmentExpression(
+				"=",
+				makeIdentifier("x"),
+				makeIntegerLiteral(1),
+			),
+			makeBinaryExpression(
+				"<",
+				makeIdentifier("x"),
+				makeIntegerLiteral(10),
+			),
+			makeAssignmentExpression(
+				"+=",
+				makeIdentifier("x"),
+				makeIntegerLiteral(1),
+			),
+			makeExpressionStatement(
+				makeAssignmentExpression(
+					"+=",
+					makeIdentifier("y"),
+					makeIntegerLiteral(1),
+				),
+			),
+		),
+		makeForStatement(
+			nil,
+			nil,
+			nil,
+			makeExpressionStatement(
+				makeAssignmentExpression(
+					"+=",
+					makeIdentifier("y"),
+					makeIntegerLiteral(1),
+				),
+			),
+		),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseIfStatement(t *testing.T) {
 	input := test.MakeInput(
 		`if level >= 15 == true then`,
@@ -789,6 +874,10 @@ func makeVariableDeclaration(ident ast.Expression, init ast.Expression) *ast.Var
 
 func makeWhileStatement(cond ast.Expression, body ast.Statement) *ast.WhileStatement {
 	return ast.NewWhileStatement(cond, body)
+}
+
+func makeForStatement(init ast.Node, cond, iter ast.Expression, body ast.Statement) *ast.ForStatement {
+	return ast.NewForStatement(init, cond, iter, body)
 }
 
 func makeIfStatement(cond ast.Expression, cons, alt ast.Statement) *ast.IfStatement {

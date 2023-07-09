@@ -141,8 +141,7 @@ type WhileStatement struct {
 	Body      Statement  `json:"body"`
 }
 
-func (ws *WhileStatement) statementNode() {
-}
+func (ws *WhileStatement) statementNode() {}
 func (ws *WhileStatement) String() string {
 	return fmt.Sprintf("(WhileStatement %v %v)", ws.Condition, ws.Body)
 }
@@ -151,6 +150,29 @@ func NewWhileStatement(condition Expression, body Statement) *WhileStatement {
 		Type:      "WhileStatement",
 		Condition: condition,
 		Body:      body,
+	}
+}
+
+type ForStatement struct {
+	// for_statement ::= FOR [expression DO statement
+	Type        string     `json:"type"`
+	Initializer Node       `json:"initializer"`
+	Condition   Expression `json:"condition"`
+	Iterator    Expression `json:"iterator"`
+	Body        Statement  `json:"body"`
+}
+
+func (fs *ForStatement) statementNode() {}
+func (fs *ForStatement) String() string {
+	return fmt.Sprintf("(ForStatement %v %v %v %v)", fs.Initializer, fs.Condition, fs.Iterator, fs.Body)
+}
+func NewForStatement(initializer Node, condition, iterator Expression, body Statement) *ForStatement {
+	return &ForStatement{
+		Type:        "ForStatement",
+		Initializer: initializer,
+		Condition:   condition,
+		Iterator:    iterator,
+		Body:        body,
 	}
 }
 

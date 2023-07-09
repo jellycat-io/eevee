@@ -99,8 +99,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		stmt = p.parseVariableStatement()
 	case token.IF:
 		stmt = p.parseIfStatement()
-	case token.WHILE:
-		stmt = p.parseWhileStatement()
+	case token.WHILE, token.FOR:
+		stmt = p.parseIterationStatement()
 	default:
 		stmt = p.parseExpressionStatement()
 	}
@@ -161,6 +161,17 @@ func (p *Parser) parseVariableInitializer() ast.Expression {
 	return p.parseAssignmentExpression()
 }
 
+func (p *Parser) parseIterationStatement() ast.Statement {
+	switch p.currentToken.Type {
+	case token.WHILE:
+		return p.parseWhileStatement()
+	case token.FOR:
+		return p.parseForStatement()
+	default:
+		return nil
+	}
+}
+
 func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 	p.eat(token.WHILE)
 	cond := p.parseExpression()
@@ -171,6 +182,44 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 	body := p.parseStatement()
 
 	return ast.NewWhileStatement(cond, body)
+}
+
+func (p *Parser) parseForStatement() *ast.ForStatement {
+	p.eat(token.FOR)
+
+	var init ast.Node
+	if !p.match(token.SEMI) {
+		init = p.parseForStatementInitializer()
+	}
+	p.eat(token.SEMI)
+
+	var cond ast.Expression
+	if !p.match(token.SEMI) {
+		cond = p.parseExpression()
+	}
+	p.eat(token.SEMI)
+
+	var iter ast.Expression
+	if !p.match(token.DO) {
+		iter = p.parseExpression()
+	}
+	p.eat(token.DO)
+
+	if p.match(token.EOL) {
+		p.eat(token.EOL)
+	}
+
+	body := p.parseStatement()
+
+	return ast.NewForStatement(init, cond, iter, body)
+}
+
+func (p *Parser) parseForStatementInitializer() ast.Node {
+	if p.match(token.LET) {
+		return p.parseVariableStatement()
+	}
+
+	return p.parseExpression()
 }
 
 func (p *Parser) parseIfStatement() *ast.IfStatement {
