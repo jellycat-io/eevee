@@ -8,28 +8,40 @@ import (
 	"github.com/jellycat-io/eevee/token"
 )
 
-var literalTypes = []token.TokenType{
-	token.INT,
-	token.FLOAT,
-	token.STRING,
-	token.TRUE,
-	token.FALSE,
-	token.NULL,
+var (
+	literalTypes = map[token.TokenType]bool{
+		token.INT:    true,
+		token.FLOAT:  true,
+		token.STRING: true,
+		token.TRUE:   true,
+		token.FALSE:  true,
+		token.NULL:   true,
+	}
+	complexAssignmentOps = map[token.TokenType]bool{
+		token.PLUS_ASSIGN:    true,
+		token.MINUS_ASSIGN:   true,
+		token.STAR_ASSIGN:    true,
+		token.SLASH_ASSIGN:   true,
+		token.PERCENT_ASSIGN: true,
+	}
+	nilExpression = ast.NewNullLiteral()
+)
+
+type ParseError struct {
+	Line    int
+	Column  int
+	Message string
 }
 
-var complexAssignmentOps = []token.TokenType{
-	token.PLUS_ASSIGN,
-	token.MINUS_ASSIGN,
-	token.STAR_ASSIGN,
-	token.SLASH_ASSIGN,
-	token.PERCENT_ASSIGN,
+func (pe *ParseError) Error() string {
+	return fmt.Errorf("[%d, %d] %s", pe.Line, pe.Column, pe.Message).Error()
 }
 
 type Parser struct {
 	tokens          []token.Token
 	currentTokenIdx int
 	currentToken    token.Token
-	errors          []error
+	errors          []ParseError
 	panicMode       bool
 	isREPL          bool
 }
@@ -42,7 +54,7 @@ func New(tokens []token.Token, isREPL bool) *Parser {
 		tokens:          tokens,
 		currentTokenIdx: currentTokenIdx,
 		currentToken:    currentToken,
-		errors:          make([]error, 0),
+		errors:          make([]ParseError, 0),
 		isREPL:          isREPL,
 	}
 }
@@ -65,13 +77,11 @@ func (p *Parser) Parse() *ast.Program {
 }
 
 func (p *Parser) parseProgram() *ast.Program {
-	stmts := p.parseStatements(token.EOF)
-
-	return ast.NewProgram(stmts)
+	return ast.NewProgram(p.parseStatements(token.EOF))
 }
 
 func (p *Parser) parseStatements(stopTokens ...token.TokenType) []ast.Statement {
-	stmts := []ast.Statement{}
+	stmts := make([]ast.Statement, 0, len(p.tokens))
 
 	for !p.matchAny(stopTokens...) {
 		stmts = append(stmts, p.parseStatement())
@@ -185,8 +195,8 @@ func (p *Parser) parseExpression() ast.Expression {
 	if p.currentToken.Type == token.ILLEGAL {
 		t := p.currentToken
 		p.advance() // Skip the illegal token
-		p.error(fmt.Errorf("[%d:%d] Unexpected token: %q", t.Line, t.Column, t.Type))
-		return nil
+		p.error(t.Line, t.Column, fmt.Sprintf("Unexpected token: %q", t.Type))
+		return nilExpression
 	}
 
 	var exp ast.Expression
@@ -262,7 +272,7 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 }
 
 func (p *Parser) parseMultiplicativeExpression() ast.Expression {
-	return p.parseBinaryExpression(p.parsePrimaryExpression, token.STAR, token.SLASH, token.PERCENT)
+	return p.parseBinaryExpression(p.parseUnaryExpression, token.STAR, token.SLASH, token.PERCENT)
 }
 
 func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...token.TokenType) ast.Expression {
@@ -286,6 +296,28 @@ func (p *Parser) parseBinaryExpression(builder func() ast.Expression, ops ...tok
 	return exp
 }
 
+func (p *Parser) parseUnaryExpression() ast.Expression {
+	var op string
+	switch p.currentToken.Type {
+	case token.PLUS:
+		op = p.eat(token.PLUS).Literal
+	case token.MINUS:
+		op = p.eat(token.MINUS).Literal
+	case token.BANG:
+		op = p.eat(token.BANG).Literal
+	}
+
+	if op != "" {
+		return ast.NewUnaryExpression(op, p.parseUnaryExpression())
+	}
+
+	return p.parseLeftHandSideExpression()
+}
+
+func (p *Parser) parseLeftHandSideExpression() ast.Expression {
+	return p.parsePrimaryExpression()
+}
+
 func (p *Parser) parsePrimaryExpression() ast.Expression {
 	if isLiteral(p.currentToken.Type) {
 		return p.parseLiteral()
@@ -295,7 +327,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 		return p.parseIdentifier()
 	}
 
-	p.error(fmt.Errorf("[%d:%d] Unexpected token: %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
+	p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Unexpected token: %q", p.currentToken.Type))
 	p.advance()
 	return nil
 }
@@ -309,8 +341,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() *ast.Identifier {
-	tok := p.eat(token.IDENT)
-	return ast.NewIdentifier(tok.Literal)
+	return ast.NewIdentifier(p.eat(token.IDENT).Literal)
 }
 
 func (p *Parser) parseLiteral() ast.Expression {
@@ -328,9 +359,9 @@ func (p *Parser) parseLiteral() ast.Expression {
 	case token.NULL:
 		return p.parseNullLiteral()
 	default:
-		p.error(fmt.Errorf("[%d:%d] Unexpected token: %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Unexpected token: %q", p.currentToken.Type))
 		p.advance()
-		return nil
+		return nilExpression
 	}
 }
 
@@ -339,7 +370,7 @@ func (p *Parser) parseIntegerLiteral() *ast.IntegerLiteral {
 
 	value, err := strconv.ParseInt(tok.Literal, 0, 64)
 	if err != nil {
-		p.error(fmt.Errorf("[%d:%d] Could not parse %q as integer", p.currentToken.Line, p.currentToken.Column, tok.Literal))
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Could not parse %q as integer", tok.Literal))
 	}
 
 	return ast.NewIntegerLiteral(int64(value))
@@ -350,7 +381,7 @@ func (p *Parser) parseFloatLiteral() *ast.FloatLiteral {
 	value, err := strconv.ParseFloat(tok.Literal, 64)
 
 	if err != nil {
-		p.error(fmt.Errorf("[%d:%d] Could not parse %q as float", p.currentToken.Line, p.currentToken.Column, tok.Literal))
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Could not parse %q as float", tok.Literal))
 	}
 
 	return ast.NewFloatLiteral(float64(value))
@@ -375,7 +406,7 @@ func (p *Parser) parseBoolLiteral(value bool) *ast.BoolLiteral {
 
 func (p *Parser) parseNullLiteral() *ast.NullLiteral {
 	p.eat(token.NULL)
-	return ast.NewNullLiteral()
+	return nilExpression
 }
 
 func (p *Parser) parseAssignmentOperator() token.Token {
@@ -402,7 +433,7 @@ func (p *Parser) checkComplexAssignmentOperator() token.TokenType {
 	case token.PERCENT_ASSIGN:
 		return token.PERCENT_ASSIGN
 	default:
-		p.error(fmt.Errorf("[%d:%d] Expected assignment operator, but got %q", p.currentToken.Line, p.currentToken.Column, p.currentToken.Type))
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Expected assignment operator, but got %q", p.currentToken.Type))
 		return token.ILLEGAL
 	}
 }
@@ -410,7 +441,7 @@ func (p *Parser) checkComplexAssignmentOperator() token.TokenType {
 func (p *Parser) eat(tokenType token.TokenType) token.Token {
 	tok := p.currentToken
 	if !p.match(tokenType) {
-		p.error(fmt.Errorf("[%d:%d] Expected %q, but got %q", p.currentToken.Line, p.currentToken.Column, tokenType, p.currentToken.Type))
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Expected %q, but got %q", tokenType, p.currentToken.Type))
 		tok = token.NewToken(token.ILLEGAL, "", p.currentToken.Line, p.currentToken.Column)
 	}
 
@@ -441,12 +472,17 @@ func (p *Parser) advance() {
 	p.panicMode = false
 }
 
-func (p *Parser) error(err error) {
+func (p *Parser) error(line, column int, msg string) {
 	if p.panicMode {
 		return // Don't report multiple errors for the same token
 	}
-
+	err := ParseError{
+		Line:    line,
+		Column:  column,
+		Message: msg,
+	}
 	p.errors = append(p.errors, err)
+
 	p.panicMode = true // Enter panic mode after an error
 }
 
@@ -475,13 +511,7 @@ func (p *Parser) isAtEnd() bool {
 }
 
 func isLiteral(tokenType token.TokenType) bool {
-	for _, tt := range literalTypes {
-		if tt == tokenType {
-			return true
-		}
-	}
-
-	return false
+	return literalTypes[tokenType]
 }
 
 // func isBinaryOperator(tokenType token.TokenType) bool {
@@ -499,10 +529,8 @@ func isAssignmentOperator(tokenType token.TokenType) bool {
 		return true
 	}
 
-	for _, tt := range complexAssignmentOps {
-		if tt == tokenType {
-			return true
-		}
+	if complexAssignmentOps[tokenType] {
+		return true
 	}
 
 	return false

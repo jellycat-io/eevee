@@ -199,7 +199,7 @@ type BinaryExpression struct {
 	// equality_expression   		::= relational_expression { (EQ | NOT_EQ) relational_expression }
 	// relational_expression 		::= additive_expression { (LT | LT_EQ | GT | GT_EQ) additive_expression }
 	// additive_expression 			::= multiplicative_expression { (PLUS | MINUS) multiplicative_expression }
-	// multiplicative_expression 	::= primary_expression { (STAR | SLASH | PERCENT) primary_expression }
+	// multiplicative_expression 	::= unary_expression { (STAR | SLASH | PERCENT) unary_expression }
 	Type     string     `json:"type"`
 	Operator string     `json:"operator"`
 	Left     Expression `json:"left"`
@@ -216,6 +216,26 @@ func NewBinaryExpression(op string, left, right Expression) *BinaryExpression {
 		Type:     "BinaryExpression",
 		Operator: op,
 		Left:     left,
+		Right:    right,
+	}
+}
+
+type UnaryExpression struct {
+	// unary_expression	:= (MINUS | NOT) unary_expression | primary_expression
+	Type     string     `json:"type"`
+	Operator string     `json:"operator"`
+	Right    Expression `json:"right"`
+}
+
+func (be *UnaryExpression) expressionNode() {}
+func (be *UnaryExpression) String() string {
+	return fmt.Sprintf("(UnaryExpression %s %v)", be.Operator, be.Right)
+}
+
+func NewUnaryExpression(op string, right Expression) *UnaryExpression {
+	return &UnaryExpression{
+		Type:     "UnaryExpression",
+		Operator: op,
 		Right:    right,
 	}
 }

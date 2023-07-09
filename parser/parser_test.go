@@ -478,6 +478,7 @@ func TestParseBinaryExpression(t *testing.T) {
 		`4 not 2`,
 		`2 not 2 < 2`,
 		`2 == 2 < 2 + 2`,
+		`-2 + 2`,
 	)
 
 	l := lexer.New(input, 4)
@@ -619,6 +620,67 @@ func TestParseBinaryExpression(t *testing.T) {
 				),
 			),
 		)),
+		makeExpressionStatement(makeBinaryExpression(
+			"+",
+			makeUnaryExpression(
+				"-",
+				makeIntegerLiteral(2),
+			),
+			makeIntegerLiteral(2),
+		)),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
+func TestUnaryExpression(t *testing.T) {
+	input := test.MakeInput(
+		`-42`,
+		`--42`,
+		`!eevee`,
+		`!!eevee`,
+		`!(2 is 2)`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(makeUnaryExpression(
+			"-",
+			makeIntegerLiteral(42),
+		)),
+		makeExpressionStatement(makeUnaryExpression(
+			"-",
+			makeUnaryExpression(
+				"-",
+				makeIntegerLiteral(42),
+			),
+		)),
+		makeExpressionStatement(makeUnaryExpression(
+			"!",
+			makeIdentifier("eevee"),
+		)),
+		makeExpressionStatement(makeUnaryExpression(
+			"!",
+			makeUnaryExpression(
+				"!",
+				makeIdentifier("eevee"),
+			),
+		)),
+		makeExpressionStatement(makeUnaryExpression(
+			"!",
+			makeBinaryExpression(
+				"==",
+				makeIntegerLiteral(2),
+				makeIntegerLiteral(2),
+			),
+		)),
 	)
 
 	if ast.String() != expectedAst.String() {
@@ -696,6 +758,10 @@ func makeLogicalExpression(op string, l, r ast.Expression) *ast.LogicalExpressio
 
 func makeBinaryExpression(op string, l, r ast.Expression) *ast.BinaryExpression {
 	return ast.NewBinaryExpression(op, l, r)
+}
+
+func makeUnaryExpression(op string, r ast.Expression) *ast.UnaryExpression {
+	return ast.NewUnaryExpression(op, r)
 }
 
 func makeIntegerLiteral(n int64) *ast.IntegerLiteral {

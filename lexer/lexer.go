@@ -34,11 +34,6 @@ func New(source string, tabSize int) *Lexer {
 		 ***************************************/
 		{`^#[^\n]*`, token.COMMENT},
 		/****************************************
-		 * Logical operators
-		 ***************************************/
-		{`^&&`, token.AND},
-		{`^\|\|`, token.OR},
-		/****************************************
 		 * Comparison operators
 		 ***************************************/
 		{`^==`, token.EQ},
@@ -47,6 +42,12 @@ func New(source string, tabSize int) *Lexer {
 		{`^>=`, token.GT_EQ},
 		{`^<`, token.LT},
 		{`^>`, token.GT},
+		/****************************************
+		 * Logical operators
+		 ***************************************/
+		{`^&&`, token.AND},
+		{`^\|\|`, token.OR},
+		{`^!`, token.BANG},
 		/****************************************
 		 * Symbols, delimiters
 		 ***************************************/
@@ -59,7 +60,6 @@ func New(source string, tabSize int) *Lexer {
 		{`^}`, token.RBRACE},
 		{`^\[`, token.LBRACKET},
 		{`^]`, token.RBRACKET},
-		{`^!`, token.BANG},
 		/****************************************
 		 * Identifiers
 		 ***************************************/
