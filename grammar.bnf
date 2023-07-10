@@ -22,6 +22,7 @@ relational_expression       ::= additive_expression { (LT | LT_EQ | GT | GT_EQ) 
 additive_expression         ::= multiplicative_expression { (PLUS | MINUS) multiplicative_expression }
 multiplicative_expression   ::= unary_expression { (STAR | SLASH | PERCENT) unary_expression }
 unary_expression            ::= (MINUS | NOT) unary_expression | primary_expression
+member_expression           ::= (IDENT DOT IDENT | IDENT LBRACKET primary_expression RBRACKET)
 primary_expression          ::= literal | grouped_expression | identifier
 literal                     ::= integer_literal | float_literal | string_literal
 integer_literal             ::= INT

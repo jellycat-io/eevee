@@ -53,6 +53,7 @@ func New(source string, tabSize int) *Lexer {
 		 ***************************************/
 		{`^;`, token.SEMI},
 		{`^,`, token.COMMA},
+		{`^\.`, token.DOT},
 		{`^:`, token.COLON},
 		{`^\(`, token.LPAREN},
 		{`^\)`, token.RPAREN},

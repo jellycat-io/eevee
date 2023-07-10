@@ -350,6 +350,28 @@ func NewUnaryExpression(op string, right Expression) *UnaryExpression {
 	}
 }
 
+type MemberExpression struct {
+	// member_expression ::= (IDENT DOT IDENT | IDENT LBRACKET primary_expression RBRACKET)
+	Type     string     `json:"type"`
+	Computed bool       `json:"computed"`
+	Object   Expression `json:"object"`
+	Property Expression `json:"property"`
+}
+
+func (be *MemberExpression) expressionNode() {}
+func (be *MemberExpression) String() string {
+	return fmt.Sprintf("(MemberExpression %t %v %v)", be.Computed, be.Object, be.Property)
+}
+
+func NewMemberExpression(computed bool, object, property Expression) *MemberExpression {
+	return &MemberExpression{
+		Type:     "MemberExpression",
+		Computed: computed,
+		Object:   object,
+		Property: property,
+	}
+}
+
 type IntegerLiteral struct {
 	// integer_literal ::= INT
 	Type  string `json:"type"`

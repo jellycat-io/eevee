@@ -194,7 +194,7 @@ func (p *Parser) parseVariableDeclaration() *ast.VariableDeclaration {
 	if !p.match(token.COMMA) && p.match(token.ASSIGN) {
 		init = p.parseVariableInitializer()
 	} else {
-		init = nil
+		init = nilExpression
 	}
 
 	return ast.NewVariableDeclaration(ident, init)
@@ -346,7 +346,7 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 
 	return ast.NewAssignmentExpression(
 		p.parseAssignmentOperator().Literal,
-		left,
+		p.checkValidAssignmentTarget(left),
 		p.parseAssignmentExpression(),
 	)
 }
@@ -436,7 +436,28 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 }
 
 func (p *Parser) parseLeftHandSideExpression() ast.Expression {
-	return p.parsePrimaryExpression()
+	return p.parseMemberExpression()
+}
+
+func (p *Parser) parseMemberExpression() ast.Expression {
+	obj := p.parsePrimaryExpression()
+
+	for p.match(token.DOT) || p.match(token.LBRACKET) {
+		if p.match(token.DOT) {
+			p.eat(token.DOT)
+			prop := p.parseIdentifier()
+			obj = ast.NewMemberExpression(false, obj, prop)
+		}
+
+		if p.match(token.LBRACKET) {
+			p.eat(token.LBRACKET)
+			prop := p.parseExpression()
+			p.eat(token.RBRACKET)
+			obj = ast.NewMemberExpression(true, obj, prop)
+		}
+	}
+
+	return obj
 }
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {
@@ -556,6 +577,17 @@ func (p *Parser) checkComplexAssignmentOperator() token.TokenType {
 	default:
 		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Expected assignment operator, but got %q", p.currentToken.Type))
 		return token.ILLEGAL
+	}
+}
+
+func (p *Parser) checkValidAssignmentTarget(node ast.Expression) ast.Expression {
+	switch node.(type) {
+	case *ast.Identifier, *ast.MemberExpression:
+		return node
+	default:
+		p.error(p.currentToken.Line, p.currentToken.Column, fmt.Sprintf("Invalid left-hand side in assignment expression: %v", node))
+		p.advance()
+		return node
 	}
 }
 

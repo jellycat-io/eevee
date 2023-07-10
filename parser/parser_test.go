@@ -120,6 +120,92 @@ func TestParseFunctionDeclaration(t *testing.T) {
 	}
 }
 
+func TestParseMemberExpression(t *testing.T) {
+	input := test.MakeInput(
+		`pokemon.level`,
+		`pokedex["eevee"]`,
+		`inventory[1]`,
+		`pokemon.level += 1`,
+		`pokedex.eevee.level += 1`,
+		`pokedex.eevee.attacks["tackle"]`,
+	)
+
+	l := lexer.New(input, 4)
+	p := New(l.Tokens, true)
+	ast := p.Parse()
+
+	checkParserErrors(t, p)
+
+	expectedAst := makeProgram(
+		makeExpressionStatement(
+			makeMemberExpression(
+				false,
+				makeIdentifier("pokemon"),
+				makeIdentifier("level"),
+			),
+		),
+		makeExpressionStatement(
+			makeMemberExpression(
+				true,
+				makeIdentifier("pokedex"),
+				makeStringLiteral("eevee"),
+			),
+		),
+		makeExpressionStatement(
+			makeMemberExpression(
+				true,
+				makeIdentifier("inventory"),
+				makeIntegerLiteral(1),
+			),
+		),
+		makeExpressionStatement(
+			makeAssignmentExpression(
+				"+=",
+				makeMemberExpression(
+					false,
+					makeIdentifier("pokemon"),
+					makeIdentifier("level"),
+				),
+				makeIntegerLiteral(1),
+			),
+		),
+		makeExpressionStatement(
+			makeAssignmentExpression(
+				"+=",
+				makeMemberExpression(
+					false,
+					makeMemberExpression(
+						false,
+						makeIdentifier("pokedex"),
+						makeIdentifier("eevee"),
+					),
+					makeIdentifier("level"),
+				),
+				makeIntegerLiteral(1),
+			),
+		),
+		makeExpressionStatement(
+			makeMemberExpression(
+				true,
+				makeMemberExpression(
+					false,
+					makeMemberExpression(
+						false,
+						makeIdentifier("pokedex"),
+						makeIdentifier("eevee"),
+					),
+					makeIdentifier("attacks"),
+				),
+				makeStringLiteral("tackle"),
+			),
+		),
+	)
+
+	if ast.String() != expectedAst.String() {
+		t.Fatalf("Expected: %q, got %q", expectedAst, ast)
+	}
+}
+
 func TestParseVariableStatement(t *testing.T) {
 	input := test.MakeInput(
 		`let pokemon = "eevee"`,
@@ -148,17 +234,17 @@ func TestParseVariableStatement(t *testing.T) {
 		makeVariableStatement(
 			makeVariableDeclaration(
 				makeIdentifier("x"),
-				nil,
+				makeNullLiteral(),
 			),
 			makeVariableDeclaration(
 				makeIdentifier("y"),
-				nil,
+				makeNullLiteral(),
 			),
 		),
 		makeVariableStatement(
 			makeVariableDeclaration(
 				makeIdentifier("x"),
-				nil,
+				makeNullLiteral(),
 			),
 			makeVariableDeclaration(
 				makeIdentifier("y"),
@@ -999,6 +1085,10 @@ func makeBinaryExpression(op string, l, r ast.Expression) *ast.BinaryExpression 
 
 func makeUnaryExpression(op string, r ast.Expression) *ast.UnaryExpression {
 	return ast.NewUnaryExpression(op, r)
+}
+
+func makeMemberExpression(comp bool, obj, prop ast.Expression) *ast.MemberExpression {
+	return ast.NewMemberExpression(comp, obj, prop)
 }
 
 func makeIntegerLiteral(n int64) *ast.IntegerLiteral {

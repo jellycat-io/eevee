@@ -48,6 +48,7 @@ const (
 	PERCENT        = TokenType("%")
 	BANG           = TokenType("!")
 	COMMA          = TokenType(",")
+	DOT            = TokenType(".")
 	SEMI           = TokenType(";")
 	COLON          = TokenType(":")
 	LPAREN         = TokenType("(")
